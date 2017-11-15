@@ -24,10 +24,43 @@ PACKAGES="\
 	wayland-protocols \
 	mesa-trunk \
 	waffle \
+
+	libinput \
+	libepoxy \
+
+	macros \
+	x11proto \
+	libxtrans \
+	libX11 \
+	libXext \
+	dri2proto \
+	glproto \
+	libpciaccess \
+	pixman \
+	xkeyboard-config \
+	xkbcomp \
+	xserver \
 "
 
 wayland_CONF="--disable-documentation"
 mesa_trunk_MESON="-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true"
+libinput_MESON="-Dlibwacom=false -Ddocumentation=false -Ddebug-gui=false -Dtests=false"
+
+libinput_GIT="git://anongit.freedesktop.org/wayland/libinput"
+
+macros_GIT="git://git.freedesktop.org/git/xorg/util/macros"
+x11proto_GIT="git://git.freedesktop.org/git/xorg/proto/x11proto"
+libxtrans_GIT="git://git.freedesktop.org/git/xorg/lib/libxtrans"
+libX11_GIT="git://git.freedesktop.org/git/xorg/lib/libX11"
+libXext_GIT="git://git.freedesktop.org/git/xorg/lib/libXext"
+dri2proto_GIT="git://git.freedesktop.org/git/xorg/proto/dri2proto"
+glproto_GIT="git://git.freedesktop.org/git/xorg/proto/glproto"
+libpciaccess_GIT="git://git.freedesktop.org/git/xorg/lib/libpciaccess"
+pixman_GIT="git://git.freedesktop.org/git/pixman"
+xserver_GIT="git://git.freedesktop.org/git/xorg/xserver"
+libepoxy_GIT="https://github.com/anholt/libepoxy.git"
+xkbcomp_GIT="git://anongit.freedesktop.org/xorg/app/xkbcomp"
+xkeyboard_config_GIT="git://anongit.freedesktop.org/xkeyboard-config"
 
 get_auto_opts()
 {
