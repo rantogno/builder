@@ -91,8 +91,8 @@ build_autot()
 	mkdir -p build
 	pushd build
 
-	../configure --prefix=$WLD $OPTS
-	make -j8 && make install
+	../configure --prefix=$WLD $PKGOPTS
+	make -j$(nproc) && make install
 
 	popd
 }
