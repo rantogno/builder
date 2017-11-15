@@ -82,6 +82,8 @@ build_autot()
 	local NNAME=$2
 	local PKGOPTS=$(get_auto_opts $NNAME)
 
+	[ -d build/ ] && return 0
+
 	if [ ! -x configure ]; then
 		NOCONFIGURE=1 ./autogen.sh
 	fi
@@ -101,6 +103,8 @@ build_meson()
 	local NNAME=$2
 	local PKGOPTS=$(get_meson_opts $NNAME)
 
+	[ -d build/ ] && return 0
+
 	meson --prefix=$WLD $PKGOPTS build
 	ninja -C build/ install
 }
@@ -110,6 +114,8 @@ build_cmake()
 	echo "Building $1 with cmake"
 	local NNAME=$2
 	local PKGOPTS=$(get_meson_opts $NNAME)
+
+	[ -d build/ ] && return 0
 
 	mkdir -p build
 	pushd build
