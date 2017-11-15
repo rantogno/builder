@@ -19,11 +19,15 @@ export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/gnupg/S.gpg-agent.ssh"
 export VK_ICD_FILENAMES="$WLD/share/vulkan/icd.d/intel_icd.x86_64.json"
 
 PACKAGES="\
+	libunwind \
+
 	libdrm \
 	wayland \
 	wayland-protocols \
 	mesa-trunk \
 	waffle \
+
+	igt-gpu-tools \
 
 	libinput \
 	libepoxy \
@@ -45,6 +49,8 @@ PACKAGES="\
 wayland_CONF="--disable-documentation"
 mesa_trunk_MESON="-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true"
 libinput_MESON="-Dlibwacom=false -Ddocumentation=false -Ddebug-gui=false -Dtests=false"
+
+libunwind_GIT="git://git.sv.gnu.org/libunwind.git"
 
 libinput_GIT="git://anongit.freedesktop.org/wayland/libinput"
 
