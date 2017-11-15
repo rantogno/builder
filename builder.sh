@@ -148,6 +148,30 @@ build()
 	popd
 }
 
+get_repo_url()
+{
+	local NNAME=${1//-/_}
+	local URL
+	eval URL="\$${NNAME}_GIT"
+	echo $URL
+}
+
+
+fetch()
+{
+	local PKGNAME=$1
+
+	local URL=$(get_repo_url $PKGNAME)
+
+	if [ -z "$URL" ]; then
+		return -1
+	fi
+
+	echo "Fetching $PKGNAME: $URL"
+
+	git clone $URL
+}
+
 mkdir -p $ACLOCAL_PATH
 
 if [ $# -eq "0" ]; then
@@ -159,6 +183,14 @@ fi
 echo "Processing packages:"
 echo $PKGS
 
+pushd $SRCDIR
+
 for pkg in $PKGS; do
+	if [ ! -d "$pkg" ]; then
+		fetch $pkg
+	fi
+
 	build $pkg
 done
+
+popd
