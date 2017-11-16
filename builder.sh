@@ -253,9 +253,46 @@ sub_uninstall()
 	echo "Uninstall not implemented yet."
 }
 
+process_clean()
+{
+	if [ $# -eq "0" ]; then
+		PKGS=$PACKAGES
+	else
+		PKGS=$@
+	fi
+
+	echo "Processing packages:"
+	echo $PKGS
+
+	pushd $SRCDIR
+
+	for pkg in $PKGS; do
+		if [[ -d "$pkg" ]]; then
+			pushd $pkg
+			git clean -fdx
+			popd
+		fi
+	done
+
+	popd
+}
+
 sub_clean()
 {
-	echo "Clean not implemented yet."
+	while getopts ":h" opt; do
+		case ${opt} in
+			\?)
+				echo "Invalid option: -$OPTARG" 1>&2
+				exit 1
+				;;
+			h)
+				echo "Usage: builder.sh clean packages"
+				exit 0
+				;;
+		esac
+	done
+	shift $((OPTIND -1))
+	process_clean $@
 }
 
 subcommand=$1
