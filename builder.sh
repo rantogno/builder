@@ -137,6 +137,13 @@ build()
 	
 	local NNAME=${PKGNAME//-/_}
 
+	local pkgdir="$SRCDIR/$PKGNAME"
+
+	if [ ! -d $pkgdir ]; then
+		echo "Can't build $PKGNAME: src dir '$pkgdir' doesn't exist."
+		return -1
+	fi
+
 	pushd $SRCDIR/$PKGNAME
 
 	if [ -d build/ -a $force_install = false ]; then
@@ -173,6 +180,7 @@ fetch()
 	local URL=$(get_repo_url $PKGNAME)
 
 	if [ -z "$URL" ]; then
+		echo "Can't fetch '$PKGNAME': url not defined."
 		return -1
 	fi
 
@@ -204,7 +212,7 @@ process_install()
 			fetch $pkg
 		fi
 
-		build $pkg
+		build $pkg || break
 	done
 
 	popd
