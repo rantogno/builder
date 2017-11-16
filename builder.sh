@@ -72,6 +72,7 @@ xkeyboard_config_GIT="git://anongit.freedesktop.org/xkeyboard-config"
 # Global options
 force_install=false
 no_fetch=false
+force_reconfigure=false
 
 get_auto_opts()
 {
@@ -93,7 +94,7 @@ build_autot()
 	local NNAME=$2
 	local PKGOPTS=$(get_auto_opts $NNAME)
 
-	if [ ! -x configure ]; then
+	if [[ ! -x configure ]] || [[ "$force_reconfigure" = true ]]; then
 		NOCONFIGURE=1 ./autogen.sh
 	fi
 
@@ -222,13 +223,16 @@ process_install()
 sub_install()
 {
 	echo "Install: $@"
-	while getopts ":hfg" opt; do
+	while getopts ":hfgc" opt; do
 		case ${opt} in
 			f)
 				force_install=true
 				;;
 			g)
 				no_fetch=true
+				;;
+			c)
+				force_reconfigure=true
 				;;
 			\?)
 				echo "Invalid option: -$OPTARG" 1>&2
