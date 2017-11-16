@@ -93,18 +93,28 @@ build_autot()
 	echo "Building $1 with autotools"
 	local NNAME=$2
 	local PKGOPTS=$(get_auto_opts $NNAME)
+	local success=false
 
 	if [[ ! -x configure ]] || [[ "$force_reconfigure" = true ]]; then
 		NOCONFIGURE=1 ./autogen.sh
+		if $? ; then
+			echo "Failed to reconfigure package: $$1"
+			return -1
+		fi
 	fi
 
 	mkdir -p build
 	pushd build
 
-	../configure --prefix=$WLD $PKGOPTS
-	make -j$(nproc) && make install
+	../configure --prefix=$WLD $PKGOPTS &&
+		make -j$(nproc) && make install &&
+		success=true
 
 	popd
+
+	if [ "$success" = false ]; then
+		return -1
+	fi
 }
 
 build_meson()
@@ -113,7 +123,7 @@ build_meson()
 	local NNAME=$2
 	local PKGOPTS=$(get_meson_opts $NNAME)
 
-	meson --prefix=$WLD $PKGOPTS build
+	meson --prefix=$WLD $PKGOPTS build || return -1
 	ninja -C build/ install
 }
 
@@ -122,14 +132,15 @@ build_cmake()
 	echo "Building $1 with cmake"
 	local NNAME=$2
 	local PKGOPTS=$(get_meson_opts $NNAME)
+	local success=false
 
 	mkdir -p build
 	pushd build
 
-	cmake .. -DCMAKE_INSTALL_PREFIX=$WLD $PKGOPTS -GNinja
+	cmake .. -DCMAKE_INSTALL_PREFIX=$WLD $PKGOPTS -GNinja && success=true
 	popd
 
-	ninja -C build/ install
+	[ "$success" = true ] && ninja -C build/ install
 }
 
 build()
@@ -154,13 +165,15 @@ build()
 	fi
 
 	if [ -f meson.build ]; then
-		build_meson $PKGNAME $NNAME
+		build_meson $PKGNAME $NNAME || return -1
 	elif [ -f autogen.sh ]; then
-		build_autot $PKGNAME $NNAME
+		build_autot $PKGNAME $NNAME || return -1
 	elif [ -f CMakeLists.txt ]; then
-		build_cmake $PKGNAME $NNAME
+		build_cmake $PKGNAME $NNAME || return -1
 	else
 		echo "Couldn't build $PKGNAME. Unknown build system."
+		popd
+		return -1
 	fi
 
 	popd
