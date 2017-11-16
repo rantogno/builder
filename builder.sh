@@ -54,6 +54,7 @@ libunwind_GIT="git://git.sv.gnu.org/libunwind.git"
 
 libinput_GIT="git://anongit.freedesktop.org/wayland/libinput"
 
+libdrm_GIT="git://anongit.freedesktop.org/drm/libdrm"
 macros_GIT="git://git.freedesktop.org/git/xorg/util/macros"
 x11proto_GIT="git://git.freedesktop.org/git/xorg/proto/x11proto"
 libxtrans_GIT="git://git.freedesktop.org/git/xorg/lib/libxtrans"
