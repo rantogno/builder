@@ -71,7 +71,7 @@ xkeyboard_config_GIT="git://anongit.freedesktop.org/xkeyboard-config"
 
 # Global options
 force_install=false
-fetch_first=false
+no_fetch=false
 
 get_auto_opts()
 {
@@ -193,7 +193,7 @@ fetch()
 process_install()
 {
 	echo "Installing packages: $@"
-	echo "Force reinstall: $force_install, fetch: $fetch_first"
+	echo "Force reinstall: $force_install, fetch: $no_fetch"
 
 	mkdir -p $ACLOCAL_PATH
 
@@ -209,7 +209,7 @@ process_install()
 	pushd $SRCDIR
 
 	for pkg in $PKGS; do
-		if [[ ! -d "$pkg" ]] && [[ "$fetch_first" = true ]]; then
+		if [[ ! -d "$pkg" ]] && [[ "$no_fetch" = false ]]; then
 			fetch $pkg
 		fi
 
@@ -228,7 +228,7 @@ sub_install()
 				force_install=true
 				;;
 			g)
-				fetch_first=true
+				no_fetch=true
 				;;
 			\?)
 				echo "Invalid option: -$OPTARG" 1>&2
