@@ -1,0 +1,4 @@
+ - add color messages for useful stuff.
+ - send build output to a log file, and add a -v option.
+ - print messages about packages built, packages not built (because of
+   early return), and packages skipped.
