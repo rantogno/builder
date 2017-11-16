@@ -68,6 +68,10 @@ libepoxy_GIT="https://github.com/anholt/libepoxy.git"
 xkbcomp_GIT="git://anongit.freedesktop.org/xorg/app/xkbcomp"
 xkeyboard_config_GIT="git://anongit.freedesktop.org/xkeyboard-config"
 
+# Global options
+force_install=false
+fetch_first=false
+
 get_auto_opts()
 {
 	local PKGOPTS
@@ -88,8 +92,6 @@ build_autot()
 	local NNAME=$2
 	local PKGOPTS=$(get_auto_opts $NNAME)
 
-	[ -d build/ ] && return 0
-
 	if [ ! -x configure ]; then
 		NOCONFIGURE=1 ./autogen.sh
 	fi
@@ -109,8 +111,6 @@ build_meson()
 	local NNAME=$2
 	local PKGOPTS=$(get_meson_opts $NNAME)
 
-	[ -d build/ ] && return 0
-
 	meson --prefix=$WLD $PKGOPTS build
 	ninja -C build/ install
 }
@@ -120,8 +120,6 @@ build_cmake()
 	echo "Building $1 with cmake"
 	local NNAME=$2
 	local PKGOPTS=$(get_meson_opts $NNAME)
-
-	[ -d build/ ] && return 0
 
 	mkdir -p build
 	pushd build
@@ -140,6 +138,11 @@ build()
 	local NNAME=${PKGNAME//-/_}
 
 	pushd $SRCDIR/$PKGNAME
+
+	if [ -d build/ -a $force_install = false ]; then
+		popd
+		return 0
+	fi
 
 	if [ -f meson.build ]; then
 		build_meson $PKGNAME $NNAME
@@ -178,25 +181,84 @@ fetch()
 	git clone $URL
 }
 
-mkdir -p $ACLOCAL_PATH
+process_install()
+{
+	echo "Installing packages: $@"
+	echo "Force reinstall: $force_install, fetch: $fetch_first"
 
-if [ $# -eq "0" ]; then
-	PKGS=$PACKAGES
-else
-	PKGS=$@
-fi
+	mkdir -p $ACLOCAL_PATH
 
-echo "Processing packages:"
-echo $PKGS
-
-pushd $SRCDIR
-
-for pkg in $PKGS; do
-	if [ ! -d "$pkg" ]; then
-		fetch $pkg
+	if [ $# -eq "0" ]; then
+		PKGS=$PACKAGES
+	else
+		PKGS=$@
 	fi
 
-	build $pkg
-done
+	echo "Processing packages:"
+	echo $PKGS
 
-popd
+	pushd $SRCDIR
+
+	for pkg in $PKGS; do
+		if [[ ! -d "$pkg" ]] && [[ "$fetch_first" = true ]]; then
+			fetch $pkg
+		fi
+
+		build $pkg
+	done
+
+	popd
+}
+
+sub_install()
+{
+	echo "Install: $@"
+	while getopts ":hfg" opt; do
+		case ${opt} in
+			f)
+				force_install=true
+				;;
+			g)
+				fetch_first=true
+				;;
+			\?)
+				echo "Invalid option: -$OPTARG" 1>&2
+				exit 1
+				;;
+			h)
+				echo "Usage: builder.sh install <options> packages"
+				exit 0
+				;;
+		esac
+	done
+	shift $((OPTIND -1))
+	process_install $@
+}
+
+sub_uninstall()
+{
+	echo "Uninstall not implemented yet."
+}
+
+sub_clean()
+{
+	echo "Clean not implemented yet."
+}
+
+subcommand=$1
+shift
+
+case $subcommand in
+	install)
+		echo "Remaining args: $@"
+		sub_install $@
+		;;
+	uninstall)
+		echo "Remaining args: $@"
+		sub_uninstall $@
+		;;
+	clean)
+		echo "Remaining args: $@"
+		sub_clean $@
+		;;
+esac
