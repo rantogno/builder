@@ -56,6 +56,7 @@ libinput_MESON="-Dlibwacom=false -Ddocumentation=false -Ddebug-gui=false -Dtests
 # Special options
 piglit_SKIPINSTALL=true
 piglit_BUILDSRCDIR=true
+piglit_SKIPALL=true
 
 # Repositories
 libunwind_GIT="git://git.sv.gnu.org/libunwind.git"
@@ -258,11 +259,13 @@ process_install()
 {
     echo "Installing packages: $@"
     echo "Force reinstall: $force_install, fetch: $no_fetch"
+    local process_all=false
 
     mkdir -p $ACLOCAL_PATH
 
     if [ $# -eq "0" ]; then
         PKGS=$PACKAGES
+        process_all=true
     else
         PKGS=$@
     fi
@@ -273,6 +276,12 @@ process_install()
     pushd $SRCDIR
 
     for pkg in $PKGS; do
+        local NNAME=${pkg//-/_}
+        local skipall=$(get_pkg_opts $NNAME SKIPALL)
+        if [[ "$skipall" = true ]] && [[ "$process_all" = true ]]; then
+            continue
+        fi
+
         if [[ ! -d "$pkg" ]] && [[ "$no_fetch" = false ]]; then
             fetch $pkg
         fi
@@ -318,8 +327,11 @@ sub_uninstall()
 
 process_clean()
 {
+    local process_all=false
+
     if [ $# -eq "0" ]; then
         PKGS=$PACKAGES
+        process_all=true
     else
         PKGS=$@
     fi
@@ -330,6 +342,12 @@ process_clean()
     pushd $SRCDIR
 
     for pkg in $PKGS; do
+        local NNAME=${pkg//-/_}
+        local skipall=$(get_pkg_opts $NNAME SKIPALL)
+        if [[ "$skipall" = true ]] && [[ "$process_all" = true ]]; then
+            continue
+        fi
+
         if [[ -d "$pkg" ]]; then
             pushd $pkg
             git clean -fdx
