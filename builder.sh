@@ -100,6 +100,15 @@ build_autot()
     local NNAME=$2
     local PKGOPTS=$(get_auto_opts $NNAME)
     local success=false
+    local skip_install=$(get_pkg_opts $NNAME SKIPINSTALL)
+    local buildsrcdir=$(get_pkg_opts $NNAME BUILDSRCDIR)
+
+    if [ "$buildsrcdir" == true ]; then
+        builddir="."
+    else
+        builddir="build"
+    fi
+
 
     if [[ ! -x configure ]] || [[ "$force_reconfigure" = true ]]; then
         NOCONFIGURE=1 ./autogen.sh
@@ -109,12 +118,15 @@ build_autot()
         fi
     fi
 
-    mkdir -p build
-    pushd build
+    mkdir -p $builddir
+    pushd $builddir
 
-    ../configure --prefix=$WLD $PKGOPTS &&
-        make -j$(nproc) && make install &&
-        success=true
+    $SRCDIR/$PKGNAME/configure --prefix=$WLD $PKGOPTS &&
+        make -j$(nproc) && success=true
+
+    if [[ "$success" = true ]] && [[ "$skip_install" != true ]]; then
+        make install || success=false
+    fi
 
     popd
 
@@ -128,9 +140,12 @@ build_meson()
     echo "Building $1 with meson"
     local NNAME=$2
     local PKGOPTS=$(get_meson_opts $NNAME)
+    local skip_install=$(get_pkg_opts $NNAME SKIPINSTALL)
+
+    # meson does not support/need BUILDSRCDIR
 
     meson --prefix=$WLD $PKGOPTS build || return -1
-    ninja -C build/ install
+    [ "$skip_install" != true ] && ninja -C build/ install
 }
 
 build_cmake()
@@ -138,15 +153,34 @@ build_cmake()
     echo "Building $1 with cmake"
     local NNAME=$2
     local PKGOPTS=$(get_meson_opts $NNAME)
-    local success=false
+    local success=true
+    local skip_install=$(get_pkg_opts $NNAME SKIPINSTALL)
+    local buildsrcdir=$(get_pkg_opts $NNAME BUILDSRCDIR)
 
-    mkdir -p build
-    pushd build
+    if [ "$buildsrcdir" == true ]; then
+        builddir="."
+    else
+        builddir="build"
+    fi
 
-    cmake .. -DCMAKE_INSTALL_PREFIX=$WLD $PKGOPTS -GNinja && success=true
+    mkdir -p $builddir
+    pushd $builddir
+
+    cmake "$SRCDIR/$PKGNAME" -DCMAKE_INSTALL_PREFIX=$WLD $PKGOPTS -GNinja || success=false
+
     popd
 
-    [ "$success" = true ] && ninja -C build/ install
+    if [ "$success" = true ]; then
+        ninja -C $builddir
+    fi
+
+    if [[ "$success" = true ]] && [[ "$skip_install" != true ]]; then
+        ninja -C $builddir install || success=false
+    fi
+
+    if [ "$success" = false ]; then
+        return -1
+    fi
 }
 
 build()
