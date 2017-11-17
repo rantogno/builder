@@ -46,6 +46,7 @@ PACKAGES="\
     xserver \
     "
 
+# Build options
 wayland_CONF="--disable-documentation"
 mesa_trunk_MESON="-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true"
 libinput_MESON="-Dlibwacom=false -Ddocumentation=false -Ddebug-gui=false -Dtests=false"
@@ -74,18 +75,23 @@ force_install=false
 no_fetch=false
 force_reconfigure=false
 
+get_pkg_opts()
+{
+    local NNAME=$1
+    local OPTNAME=$2
+    local PKGOPTS
+    eval PKGOPTS="\$${NNAME}_${OPTNAME}"
+    echo $PKGOPTS
+}
+
 get_auto_opts()
 {
-    local PKGOPTS
-    eval PKGOPTS="\$${NNAME}_CONF"
-    echo $PKGOPTS
+    get_pkg_opts $1 "CONF"
 }
 
 get_meson_opts()
 {
-    local PKGOPTS
-    eval PKGOPTS="\$${NNAME}_MESON"
-    echo $PKGOPTS
+    get_pkg_opts $1 "MESON"
 }
 
 build_autot()
