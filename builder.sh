@@ -27,6 +27,8 @@ PACKAGES="\
     mesa-trunk \
     waffle \
 
+    piglit \
+
     igt-gpu-tools \
 
     libinput \
@@ -51,11 +53,19 @@ wayland_CONF="--disable-documentation"
 mesa_trunk_MESON="-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true"
 libinput_MESON="-Dlibwacom=false -Ddocumentation=false -Ddebug-gui=false -Dtests=false"
 
+# Special options
+piglit_SKIPINSTALL=true
+piglit_BUILDSRCDIR=true
+
+# Repositories
 libunwind_GIT="git://git.sv.gnu.org/libunwind.git"
 
 libinput_GIT="git://anongit.freedesktop.org/wayland/libinput"
 
 libdrm_GIT="git://anongit.freedesktop.org/drm/libdrm"
+
+piglit_GIT="git://anongit.freedesktop.org/piglit"
+
 macros_GIT="git://git.freedesktop.org/git/xorg/util/macros"
 x11proto_GIT="git://git.freedesktop.org/git/xorg/proto/x11proto"
 libxtrans_GIT="git://git.freedesktop.org/git/xorg/lib/libxtrans"
