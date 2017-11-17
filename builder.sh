@@ -19,32 +19,32 @@ export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/gnupg/S.gpg-agent.ssh"
 export VK_ICD_FILENAMES="$WLD/share/vulkan/icd.d/intel_icd.x86_64.json"
 
 PACKAGES="\
-	libunwind \
+    libunwind \
 
-	libdrm \
-	wayland \
-	wayland-protocols \
-	mesa-trunk \
-	waffle \
+    libdrm \
+    wayland \
+    wayland-protocols \
+    mesa-trunk \
+    waffle \
 
-	igt-gpu-tools \
+    igt-gpu-tools \
 
-	libinput \
-	libepoxy \
+    libinput \
+    libepoxy \
 
-	macros \
-	x11proto \
-	libxtrans \
-	libX11 \
-	libXext \
-	dri2proto \
-	glproto \
-	libpciaccess \
-	pixman \
-	xkeyboard-config \
-	xkbcomp \
-	xserver \
-"
+    macros \
+    x11proto \
+    libxtrans \
+    libX11 \
+    libXext \
+    dri2proto \
+    glproto \
+    libpciaccess \
+    pixman \
+    xkeyboard-config \
+    xkbcomp \
+    xserver \
+    "
 
 wayland_CONF="--disable-documentation"
 mesa_trunk_MESON="-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true"
@@ -76,252 +76,252 @@ force_reconfigure=false
 
 get_auto_opts()
 {
-	local PKGOPTS
-	eval PKGOPTS="\$${NNAME}_CONF"
-	echo $PKGOPTS
+    local PKGOPTS
+    eval PKGOPTS="\$${NNAME}_CONF"
+    echo $PKGOPTS
 }
 
 get_meson_opts()
 {
-	local PKGOPTS
-	eval PKGOPTS="\$${NNAME}_MESON"
-	echo $PKGOPTS
+    local PKGOPTS
+    eval PKGOPTS="\$${NNAME}_MESON"
+    echo $PKGOPTS
 }
 
 build_autot()
 {
-	echo "Building $1 with autotools"
-	local NNAME=$2
-	local PKGOPTS=$(get_auto_opts $NNAME)
-	local success=false
+    echo "Building $1 with autotools"
+    local NNAME=$2
+    local PKGOPTS=$(get_auto_opts $NNAME)
+    local success=false
 
-	if [[ ! -x configure ]] || [[ "$force_reconfigure" = true ]]; then
-		NOCONFIGURE=1 ./autogen.sh
-		if $? ; then
-			echo "Failed to reconfigure package: $$1"
-			return -1
-		fi
-	fi
+    if [[ ! -x configure ]] || [[ "$force_reconfigure" = true ]]; then
+        NOCONFIGURE=1 ./autogen.sh
+        if $? ; then
+            echo "Failed to reconfigure package: $$1"
+            return -1
+        fi
+    fi
 
-	mkdir -p build
-	pushd build
+    mkdir -p build
+    pushd build
 
-	../configure --prefix=$WLD $PKGOPTS &&
-		make -j$(nproc) && make install &&
-		success=true
+    ../configure --prefix=$WLD $PKGOPTS &&
+        make -j$(nproc) && make install &&
+        success=true
 
-	popd
+    popd
 
-	if [ "$success" = false ]; then
-		return -1
-	fi
+    if [ "$success" = false ]; then
+        return -1
+    fi
 }
 
 build_meson()
 {
-	echo "Building $1 with meson"
-	local NNAME=$2
-	local PKGOPTS=$(get_meson_opts $NNAME)
+    echo "Building $1 with meson"
+    local NNAME=$2
+    local PKGOPTS=$(get_meson_opts $NNAME)
 
-	meson --prefix=$WLD $PKGOPTS build || return -1
-	ninja -C build/ install
+    meson --prefix=$WLD $PKGOPTS build || return -1
+    ninja -C build/ install
 }
 
 build_cmake()
 {
-	echo "Building $1 with cmake"
-	local NNAME=$2
-	local PKGOPTS=$(get_meson_opts $NNAME)
-	local success=false
+    echo "Building $1 with cmake"
+    local NNAME=$2
+    local PKGOPTS=$(get_meson_opts $NNAME)
+    local success=false
 
-	mkdir -p build
-	pushd build
+    mkdir -p build
+    pushd build
 
-	cmake .. -DCMAKE_INSTALL_PREFIX=$WLD $PKGOPTS -GNinja && success=true
-	popd
+    cmake .. -DCMAKE_INSTALL_PREFIX=$WLD $PKGOPTS -GNinja && success=true
+    popd
 
-	[ "$success" = true ] && ninja -C build/ install
+    [ "$success" = true ] && ninja -C build/ install
 }
 
 build()
 {
-	local PKGNAME=$1
-	echo "Building $PKGNAME..."
-	
-	local NNAME=${PKGNAME//-/_}
+    local PKGNAME=$1
+    echo "Building $PKGNAME..."
 
-	local pkgdir="$SRCDIR/$PKGNAME"
+    local NNAME=${PKGNAME//-/_}
 
-	if [ ! -d $pkgdir ]; then
-		echo "Can't build $PKGNAME: src dir '$pkgdir' doesn't exist."
-		return -1
-	fi
+    local pkgdir="$SRCDIR/$PKGNAME"
 
-	pushd $SRCDIR/$PKGNAME
+    if [ ! -d $pkgdir ]; then
+        echo "Can't build $PKGNAME: src dir '$pkgdir' doesn't exist."
+        return -1
+    fi
 
-	if [ -d build/ -a $force_install = false ]; then
-		popd
-		return 0
-	fi
+    pushd $SRCDIR/$PKGNAME
 
-	if [ -f meson.build ]; then
-		build_meson $PKGNAME $NNAME || return -1
-	elif [ -f autogen.sh ]; then
-		build_autot $PKGNAME $NNAME || return -1
-	elif [ -f CMakeLists.txt ]; then
-		build_cmake $PKGNAME $NNAME || return -1
-	else
-		echo "Couldn't build $PKGNAME. Unknown build system."
-		popd
-		return -1
-	fi
+    if [ -d build/ -a $force_install = false ]; then
+        popd
+        return 0
+    fi
 
-	popd
+    if [ -f meson.build ]; then
+        build_meson $PKGNAME $NNAME || return -1
+    elif [ -f autogen.sh ]; then
+        build_autot $PKGNAME $NNAME || return -1
+    elif [ -f CMakeLists.txt ]; then
+        build_cmake $PKGNAME $NNAME || return -1
+    else
+        echo "Couldn't build $PKGNAME. Unknown build system."
+        popd
+        return -1
+    fi
+
+    popd
 }
 
 get_repo_url()
 {
-	local NNAME=${1//-/_}
-	local URL
-	eval URL="\$${NNAME}_GIT"
-	echo $URL
+    local NNAME=${1//-/_}
+    local URL
+    eval URL="\$${NNAME}_GIT"
+    echo $URL
 }
 
 
 fetch()
 {
-	local PKGNAME=$1
+    local PKGNAME=$1
 
-	local URL=$(get_repo_url $PKGNAME)
+    local URL=$(get_repo_url $PKGNAME)
 
-	if [ -z "$URL" ]; then
-		echo "Can't fetch '$PKGNAME': url not defined."
-		return -1
-	fi
+    if [ -z "$URL" ]; then
+        echo "Can't fetch '$PKGNAME': url not defined."
+        return -1
+    fi
 
-	echo "Fetching $PKGNAME: $URL"
+    echo "Fetching $PKGNAME: $URL"
 
-	git clone $URL
+    git clone $URL
 }
 
 process_install()
 {
-	echo "Installing packages: $@"
-	echo "Force reinstall: $force_install, fetch: $no_fetch"
+    echo "Installing packages: $@"
+    echo "Force reinstall: $force_install, fetch: $no_fetch"
 
-	mkdir -p $ACLOCAL_PATH
+    mkdir -p $ACLOCAL_PATH
 
-	if [ $# -eq "0" ]; then
-		PKGS=$PACKAGES
-	else
-		PKGS=$@
-	fi
+    if [ $# -eq "0" ]; then
+        PKGS=$PACKAGES
+    else
+        PKGS=$@
+    fi
 
-	echo "Processing packages:"
-	echo $PKGS
+    echo "Processing packages:"
+    echo $PKGS
 
-	pushd $SRCDIR
+    pushd $SRCDIR
 
-	for pkg in $PKGS; do
-		if [[ ! -d "$pkg" ]] && [[ "$no_fetch" = false ]]; then
-			fetch $pkg
-		fi
+    for pkg in $PKGS; do
+        if [[ ! -d "$pkg" ]] && [[ "$no_fetch" = false ]]; then
+            fetch $pkg
+        fi
 
-		build $pkg || break
-	done
+        build $pkg || break
+    done
 
-	popd
+    popd
 }
 
 sub_install()
 {
-	echo "Install: $@"
-	while getopts ":hfgc" opt; do
-		case ${opt} in
-			f)
-				force_install=true
-				;;
-			g)
-				no_fetch=true
-				;;
-			c)
-				force_reconfigure=true
-				;;
-			\?)
-				echo "Invalid option: -$OPTARG" 1>&2
-				exit 1
-				;;
-			h)
-				echo "Usage: builder.sh install <options> packages"
-				exit 0
-				;;
-		esac
-	done
-	shift $((OPTIND -1))
-	process_install $@
+    echo "Install: $@"
+    while getopts ":hfgc" opt; do
+        case ${opt} in
+            f)
+                force_install=true
+                ;;
+            g)
+                no_fetch=true
+                ;;
+            c)
+                force_reconfigure=true
+                ;;
+            \?)
+                echo "Invalid option: -$OPTARG" 1>&2
+                exit 1
+                ;;
+            h)
+                echo "Usage: builder.sh install <options> packages"
+                exit 0
+                ;;
+        esac
+    done
+    shift $((OPTIND -1))
+    process_install $@
 }
 
 sub_uninstall()
 {
-	echo "Uninstall not implemented yet."
+    echo "Uninstall not implemented yet."
 }
 
 process_clean()
 {
-	if [ $# -eq "0" ]; then
-		PKGS=$PACKAGES
-	else
-		PKGS=$@
-	fi
+    if [ $# -eq "0" ]; then
+        PKGS=$PACKAGES
+    else
+        PKGS=$@
+    fi
 
-	echo "Processing packages:"
-	echo $PKGS
+    echo "Processing packages:"
+    echo $PKGS
 
-	pushd $SRCDIR
+    pushd $SRCDIR
 
-	for pkg in $PKGS; do
-		if [[ -d "$pkg" ]]; then
-			pushd $pkg
-			git clean -fdx
-			popd
-		fi
-	done
+    for pkg in $PKGS; do
+        if [[ -d "$pkg" ]]; then
+            pushd $pkg
+            git clean -fdx
+            popd
+        fi
+    done
 
-	popd
+    popd
 }
 
 sub_clean()
 {
-	while getopts ":h" opt; do
-		case ${opt} in
-			\?)
-				echo "Invalid option: -$OPTARG" 1>&2
-				exit 1
-				;;
-			h)
-				echo "Usage: builder.sh clean packages"
-				exit 0
-				;;
-		esac
-	done
-	shift $((OPTIND -1))
-	process_clean $@
+    while getopts ":h" opt; do
+        case ${opt} in
+            \?)
+                echo "Invalid option: -$OPTARG" 1>&2
+                exit 1
+                ;;
+            h)
+                echo "Usage: builder.sh clean packages"
+                exit 0
+                ;;
+        esac
+    done
+    shift $((OPTIND -1))
+    process_clean $@
 }
 
 subcommand=$1
 shift
 
 case $subcommand in
-	install)
-		echo "Remaining args: $@"
-		sub_install $@
-		;;
-	uninstall)
-		echo "Remaining args: $@"
-		sub_uninstall $@
-		;;
-	clean)
-		echo "Remaining args: $@"
-		sub_clean $@
-		;;
+    install)
+        echo "Remaining args: $@"
+        sub_install $@
+        ;;
+    uninstall)
+        echo "Remaining args: $@"
+        sub_uninstall $@
+        ;;
+    clean)
+        echo "Remaining args: $@"
+        sub_clean $@
+        ;;
 esac
