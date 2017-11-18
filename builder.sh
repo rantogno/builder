@@ -267,7 +267,7 @@ func_install()
         fetch $pkg
     fi
 
-    build $pkg $NNAME || break
+    build $pkg $NNAME || return -1
 }
 
 func_clean()
@@ -307,7 +307,7 @@ process_packages()
         fi
 
         # call command
-        $call_func $pkg $NNAME
+        $call_func $pkg $NNAME || break
     done
 }
 
