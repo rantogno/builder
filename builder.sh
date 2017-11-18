@@ -197,9 +197,8 @@ build_cmake()
 build()
 {
     local PKGNAME=$1
+    local NNAME=$2
     echo "Building $PKGNAME..."
-
-    local NNAME=${PKGNAME//-/_}
 
     local pkgdir="$SRCDIR/$PKGNAME"
 
@@ -252,16 +251,43 @@ fetch()
 
     echo "Fetching $PKGNAME: $URL"
 
-    git clone $URL
+    git clone $URL "$SRCDIR/$PKGNAME"
 }
 
-process_install()
+func_install()
 {
-    echo "Installing packages: $@"
-    echo "Force reinstall: $force_install, fetch: $no_fetch"
-    local process_all=false
+    local pkgname=$1
+    local NNAME=$2
 
     mkdir -p $ACLOCAL_PATH
+
+    local skipall=$(get_pkg_opts $NNAME SKIPALL)
+
+    if [[ ! -d "$SRCDIR/$pkgname" ]] && [[ "$no_fetch" = false ]]; then
+        fetch $pkg
+    fi
+
+    build $pkg $NNAME || break
+}
+
+func_clean()
+{
+    local pkgname=$1
+    local NNAME=$2
+
+    if [[ -d "$SRCDIR/$pkgname" ]]; then
+        pushd "$SRCDIR/$pkgname"
+        git clean -fdx
+        popd
+    fi
+}
+
+process_packages()
+{
+    local process_all=false
+    local call_func=$1
+
+    shift
 
     if [ $# -eq "0" ]; then
         PKGS=$PACKAGES
@@ -273,8 +299,6 @@ process_install()
     echo "Processing packages:"
     echo $PKGS
 
-    pushd $SRCDIR
-
     for pkg in $PKGS; do
         local NNAME=${pkg//-/_}
         local skipall=$(get_pkg_opts $NNAME SKIPALL)
@@ -282,19 +306,15 @@ process_install()
             continue
         fi
 
-        if [[ ! -d "$pkg" ]] && [[ "$no_fetch" = false ]]; then
-            fetch $pkg
-        fi
-
-        build $pkg || break
+        # call command
+        $call_func $pkg $NNAME
     done
-
-    popd
 }
 
-sub_install()
+parse_install()
 {
-    echo "Install: $@"
+    echo "Installing packages: $@"
+
     while getopts ":hfgc" opt; do
         case ${opt} in
             f)
@@ -317,48 +337,17 @@ sub_install()
         esac
     done
     shift $((OPTIND -1))
-    process_install $@
+
+    echo "Force reinstall: $force_install, fetch: $no_fetch"
+    process_packages func_install $@
 }
 
-sub_uninstall()
+parse_uninstall()
 {
     echo "Uninstall not implemented yet."
 }
 
-process_clean()
-{
-    local process_all=false
-
-    if [ $# -eq "0" ]; then
-        PKGS=$PACKAGES
-        process_all=true
-    else
-        PKGS=$@
-    fi
-
-    echo "Processing packages:"
-    echo $PKGS
-
-    pushd $SRCDIR
-
-    for pkg in $PKGS; do
-        local NNAME=${pkg//-/_}
-        local skipall=$(get_pkg_opts $NNAME SKIPALL)
-        if [[ "$skipall" = true ]] && [[ "$process_all" = true ]]; then
-            continue
-        fi
-
-        if [[ -d "$pkg" ]]; then
-            pushd $pkg
-            git clean -fdx
-            popd
-        fi
-    done
-
-    popd
-}
-
-sub_clean()
+parse_clean()
 {
     while getopts ":h" opt; do
         case ${opt} in
@@ -373,7 +362,8 @@ sub_clean()
         esac
     done
     shift $((OPTIND -1))
-    process_clean $@
+
+    process_packages func_clean $@
 }
 
 subcommand=$1
@@ -382,14 +372,14 @@ shift
 case $subcommand in
     install)
         echo "Remaining args: $@"
-        sub_install $@
+        parse_install $@
         ;;
     uninstall)
         echo "Remaining args: $@"
-        sub_uninstall $@
+        parse_uninstall $@
         ;;
     clean)
         echo "Remaining args: $@"
-        sub_clean $@
+        parse_clean $@
         ;;
 esac
