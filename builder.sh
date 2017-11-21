@@ -369,8 +369,9 @@ process_packages()
         PKGS=$@
     fi
 
-    print_bold_ln "Processing packages:"
-    print_blue_ln $PKGS
+    echo
+    echo "Processing packages:"
+    print_bold_ln $PKGS
 
     for pkg in $PKGS; do
         local NNAME=${pkg//-/_}
