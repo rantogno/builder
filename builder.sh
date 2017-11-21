@@ -11,8 +11,6 @@ export ACLOCAL="aclocal -I $ACLOCAL_PATH"
 
 export CMAKE_PREFIX_PATH=$WLD
 
-export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR}/gnupg/S.gpg-agent.ssh"
-
 # export PATH="$HOME/depot_tools:$PATH"
 # export DISPLAY=":0"
 
