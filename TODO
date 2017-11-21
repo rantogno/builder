@@ -2,5 +2,7 @@
  - send build output to a log file, and add a -v option.
  - print messages about packages built, packages not built (because of
    early return), and packages skipped.
- - add pkg option to skip install, and to make srcdir == builddir
-   (useful for piglit and CTS)
+ - make src=build dir option be aware of already built projects
+ - add a fetch-only mode
+    - if fetch-only, skip undefined URL's or things that couldn't be
+      fetch, and inform about them at the end

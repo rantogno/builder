@@ -65,7 +65,15 @@ libinput_GIT="git://anongit.freedesktop.org/wayland/libinput"
 
 libdrm_GIT="git://anongit.freedesktop.org/drm/libdrm"
 
+wayland_GIT="git://anongit.freedesktop.org/wayland/wayland"
+wayland_protocols_GIT="git://anongit.freedesktop.org/wayland/wayland-protocols"
+
+mesa_GIT="git://anongit.freedesktop.org/mesa/mesa"
+
+waffle_GIT="git@github.com:waffle-gl/waffle.git"
 piglit_GIT="git://anongit.freedesktop.org/piglit"
+
+igt_gpu_tools_GIT="git://anongit.freedesktop.org/drm/igt-gpu-tools"
 
 macros_GIT="git://git.freedesktop.org/git/xorg/util/macros"
 x11proto_GIT="git://git.freedesktop.org/git/xorg/proto/x11proto"
