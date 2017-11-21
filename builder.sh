@@ -92,6 +92,31 @@ force_install=false
 no_fetch=false
 force_reconfigure=false
 
+print_color()
+{
+    local color=$1
+    local newline=$2
+    local msg=$3
+    local nlopt=""
+
+    if [ "$newline" = false ]; then
+        nlopt="-n"
+    fi
+
+    echo -e $nlopt "${color}${msg}"
+    tput sgr0
+}
+
+print_bold_ln()
+{
+    print_color "\033[1m" true "$1"
+}
+
+print_bold()
+{
+    print_color "\033[1m" false "$1"
+}
+
 get_pkg_opts()
 {
     local NNAME=$1
@@ -302,7 +327,7 @@ process_packages()
         PKGS=$@
     fi
 
-    echo "Processing packages:"
+    print_bold_ln "Processing packages:"
     echo $PKGS
 
     for pkg in $PKGS; do
