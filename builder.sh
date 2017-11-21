@@ -24,7 +24,7 @@ PACKAGES="\
     libdrm \
     wayland \
     wayland-protocols \
-    mesa-trunk \
+    mesa \
     waffle \
 
     piglit \
