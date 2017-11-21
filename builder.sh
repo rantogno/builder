@@ -95,8 +95,10 @@ force_reconfigure=false
 print_color()
 {
     local color=$1
+    shift
     local newline=$2
-    local msg=$3
+    shift
+    local msg=$@
     local nlopt=""
 
     if [ "$newline" = false ]; then
@@ -109,12 +111,52 @@ print_color()
 
 print_bold_ln()
 {
-    print_color "\033[1m" true "$1"
+    print_color "\033[1m" true "$@"
 }
 
 print_bold()
 {
-    print_color "\033[1m" false "$1"
+    print_color "\033[1m" false "$@"
+}
+
+print_blue_ln()
+{
+    print_color "\E[34m" true "$@"
+}
+
+print_blue()
+{
+    print_color "\E[34m" false "$@"
+}
+
+print_red_ln()
+{
+    print_color "\E[31m" true "$@"
+}
+
+print_red()
+{
+    print_color "\E[31m" false "$@"
+}
+
+print_green_ln()
+{
+    print_color "\E[32m" true "$@"
+}
+
+print_green()
+{
+    print_color "\E[32m" false "$@"
+}
+
+print_yellow_ln()
+{
+    print_color "\E[33m" true "$@"
+}
+
+print_yellow()
+{
+    print_color "\E[33m" false "$@"
 }
 
 get_pkg_opts()
@@ -328,7 +370,7 @@ process_packages()
     fi
 
     print_bold_ln "Processing packages:"
-    echo $PKGS
+    print_blue_ln $PKGS
 
     for pkg in $PKGS; do
         local NNAME=${pkg//-/_}
