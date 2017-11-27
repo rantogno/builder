@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+if [ -n "$WLD" ]; then
+    echo "WLD already set: $WLD"
+    echo "Please run this script with a clean env."
+    exit 5
+fi
+
 export SRCDIR="/home/rantogno/intel/work"
 export WLD="/home/rantogno/usr"
 
