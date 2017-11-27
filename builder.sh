@@ -434,7 +434,9 @@ process_packages()
 
     echo
     echo "Processing packages:"
+    echo
     print_bold_ln $PKGS
+    echo
 
     for pkg in $PKGS; do
         local NNAME=${pkg//-/_}
