@@ -310,6 +310,22 @@ get_repo_url()
     echo $URL
 }
 
+check_fetch()
+{
+    local pkgname=$1
+    local URL=$2
+
+    if [ -d "$SRCDIR/$pkgname" ]; then
+        return 1
+    fi
+
+    if [ -z "$URL" ]; then
+        echo "Can't fetch '$pkgname': url not defined."
+        return 2
+    fi
+
+    return 0
+}
 
 fetch()
 {
@@ -317,12 +333,14 @@ fetch()
 
     local URL=$(get_repo_url $PKGNAME)
 
-    if [ -z "$URL" ]; then
-        echo "Can't fetch '$PKGNAME': url not defined."
-        return -1
-    fi
+    echo "Fetching $PKGNAME ($URL): "
 
-    echo "Fetching $PKGNAME: $URL"
+    check_fetch $PKGNAME $URL
+    local result=$?
+
+    if [ "$result" != 0 ]; then
+        return $result
+    fi
 
     git clone $URL "$SRCDIR/$PKGNAME"
 }
@@ -331,16 +349,61 @@ func_install()
 {
     local pkgname=$1
     local NNAME=$2
+    local result=0
+    local fetch_result=0
 
     mkdir -p $ACLOCAL_PATH
 
-    local skipall=$(get_pkg_opts $NNAME SKIPALL)
+    # Fetching source
+    echo -n "Fetching ${pkgname}: "
 
-    if [[ ! -d "$SRCDIR/$pkgname" ]] && [[ "$no_fetch" = false ]]; then
-        fetch $pkg
+    if [ "$no_fetch" = false ]; then
+        fetch $pkg >&3 2>&1
+        result=$?
     fi
 
-    build $pkg $NNAME || return -1
+    case $result in
+        0)
+            print_green_ln "DONE"
+            ;;
+        1)
+            print_bold_ln "SKIP"
+            ;;
+        2)
+            print_yellow_ln "SKIP - NO URL"
+            fetch_result=2
+            ;;
+        *)
+            print_red_ln "ERROR"
+            fetch_result=3
+            ;;
+    esac
+
+    if [ "$fetch_result" != 0 ]; then
+        return $fetch_result
+    fi
+
+    # Building project
+    echo -n "Building $pkgname: "
+
+    result=0
+    build $pkg $NNAME >&3 2>&1
+    result=$?
+
+    case $result in
+        0)
+            print_green_ln "DONE"
+            ;;
+        1)
+            print_bold_ln "SKIP"
+            ;;
+        *)
+            print_red_ln "ERROR"
+            result=3
+            ;;
+    esac
+
+    return $result
 }
 
 func_clean()
@@ -381,7 +444,10 @@ process_packages()
         fi
 
         # call command
-        $call_func $pkg $NNAME || break
+        $call_func $pkg $NNAME 3> "/tmp/builder/${pkg}_log.txt"
+        if [ "$?" != 0 ]; then
+            break
+        fi
     done
 }
 
