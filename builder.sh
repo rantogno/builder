@@ -50,12 +50,14 @@ PACKAGES="\
     xkeyboard-config \
     xkbcomp \
     xserver \
+    weston \
     "
 
 # Build options
 wayland_CONF="--disable-documentation"
 mesa_MESON="-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true"
 libinput_MESON="-Dlibwacom=false -Ddocumentation=false -Ddebug-gui=false -Dtests=false"
+weston_CONF="--disable-setuid-install --enable-clients --enable-demo-clients-install"
 
 # Special options
 piglit_SKIPINSTALL=true
@@ -92,6 +94,7 @@ xserver_GIT="git://git.freedesktop.org/git/xorg/xserver"
 libepoxy_GIT="https://github.com/anholt/libepoxy.git"
 xkbcomp_GIT="git://anongit.freedesktop.org/xorg/app/xkbcomp"
 xkeyboard_config_GIT="git://anongit.freedesktop.org/xkeyboard-config"
+weston_GIT="git://anongit.freedesktop.org/wayland/weston"
 
 # Global options
 force_install=false
