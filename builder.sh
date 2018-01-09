@@ -35,6 +35,8 @@ PACKAGES="\
 
     igt-gpu-tools \
 
+    crucible \
+
     libinput \
     libepoxy \
 
@@ -64,6 +66,10 @@ piglit_SKIPINSTALL=true
 piglit_BUILDSRCDIR=true
 piglit_SKIPALL=true
 
+crucible_SKIPINSTALL=true
+crucible_BUILDSRCDIR=true
+crucible_SKIPALL=true
+
 # Repositories
 libunwind_GIT="git://git.sv.gnu.org/libunwind.git"
 
@@ -80,6 +86,8 @@ waffle_GIT="git@github.com:waffle-gl/waffle.git"
 piglit_GIT="git://anongit.freedesktop.org/piglit"
 
 igt_gpu_tools_GIT="git://anongit.freedesktop.org/drm/igt-gpu-tools"
+
+crucible_GIT="git://anongit.freedesktop.org/mesa/crucible"
 
 macros_GIT="git://git.freedesktop.org/git/xorg/util/macros"
 x11proto_GIT="git://git.freedesktop.org/git/xorg/proto/x11proto"
