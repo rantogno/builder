@@ -528,6 +528,8 @@ parse_clean()
 subcommand=$1
 shift
 
+mkdir -p /tmp/builder
+
 case $subcommand in
     install)
         echo "Remaining args: $@"
