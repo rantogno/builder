@@ -18,7 +18,7 @@ def main():
     pkg_parser.add_argument('packages', metavar='PKG', type=str, nargs='*',
             help='package to process')
 
-    commands = parser.add_subparsers(help='commands to run')
+    commands = parser.add_subparsers(help='commands to run', dest='subparser')
 
     # Install packages
     install_p = commands.add_parser('install',
@@ -33,7 +33,11 @@ def main():
     clean_p.set_defaults(func=pkg_clean)
 
     args = parser.parse_args()
-    args.func(args)
+
+    if args.subparser is not None:
+        args.func(args)
+    else:
+        parser.print_help()
 
 if __name__ == '__main__':
     main()
