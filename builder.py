@@ -1,6 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+PACKAGES = {
+        'libunwind': {
+            'uri': 'git://git.sv.gnu.org/libunwind.git',
+            },
+        'libdrm': {
+            'uri': 'git://anongit.freedesktop.org/drm/libdrm',
+            },
+        'wayland': {
+            'uri': 'git://anongit.freedesktop.org/wayland/wayland',
+            'autotools': '--disable-documentation'
+            },
+        'wayland-protocols': {
+            'uri': 'git://anongit.freedesktop.org/wayland/wayland-protocols',
+            },
+        'mesa': {
+            'uri': 'git://anongit.freedesktop.org/mesa/mesa',
+            'meson': '-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true'
+            },
+        'waffle': {
+            'uri': 'https://github.com/waffle-gl/waffle.git',
+            },
+        'piglit': {
+            'uri': 'git://anongit.freedesktop.org/piglit',
+            },
+        'igt-gpu-tools': {
+            'uri': 'git://anongit.freedesktop.org/drm/igt-gpu-tools',
+            },
+}
+
 import argparse
 
 def pkg_install(args):
@@ -8,6 +37,23 @@ def pkg_install(args):
 
 def pkg_clean(args):
     pass
+
+def check_packages(packages):
+    invalid = False
+    for pkg in packages:
+        if pkg not in PACKAGES:
+            print('invalid pkg name:', pkg)
+            invalid = True;
+
+    return not invalid
+
+def process_pkgs(args):
+    if not check_packages(args.packages):
+        return False
+
+    for pkg in args.packages:
+        if pkg in PACKAGES:
+            print('pkg:', pkg)
 
 def main():
     parser = argparse.ArgumentParser(description='Builder for mesa')
@@ -35,7 +81,7 @@ def main():
     args = parser.parse_args()
 
     if args.subparser is not None:
-        args.func(args)
+        process_pkgs(args)
     else:
         parser.print_help()
 
