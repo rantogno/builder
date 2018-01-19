@@ -30,7 +30,10 @@ PACKAGES = {
             },
 }
 
-import argparse
+import argparse, os
+
+# _verbose = False
+# _logfile = '/tmp/builder.log'
 
 def pkg_install(args):
     print("installing packages: ", args)
@@ -51,9 +54,48 @@ def process_pkgs(args):
     if not check_packages(args.packages):
         return False
 
+    if not process_options(args):
+        return False
+
     for pkg in args.packages:
         if pkg in PACKAGES:
-            print('pkg:', pkg)
+            args.func(pkg)
+
+
+class Logger:
+    def __init__(self, logfile):
+        print('logfile: ', logfile)
+
+class Builder:
+
+    def __init__(self, args):
+        self.__args = args
+        self.__logfile = '/tmp/builder.log'
+
+        self.process_options(args)
+        self.logger = Logger(self.__logfile)
+
+    def process_options(self, args):
+        self.__verbose = args.verbose
+
+        if args.output is not None:
+            self.__logfile = args.output
+
+        self.__command = args.subparser
+
+    def run(self):
+        operation = {
+                'install': self.install,
+                'clean': self.clean,
+                }
+
+        operation[self.__command]()
+
+    def install(self):
+        print("Install")
+
+    def clean(self):
+        print('Clean')
 
 def main():
     parser = argparse.ArgumentParser(description='Builder for mesa')
@@ -70,18 +112,17 @@ def main():
     install_p = commands.add_parser('install',
             parents=[pkg_parser],
             help='build and install packages')
-    install_p.set_defaults(func=pkg_install)
 
     # Clean packages
     clean_p = commands.add_parser('clean',
             parents=[pkg_parser],
             help='clean package source dir')
-    clean_p.set_defaults(func=pkg_clean)
 
     args = parser.parse_args()
 
     if args.subparser is not None:
-        process_pkgs(args)
+        builder = Builder(args)
+        builder.run()
     else:
         parser.print_help()
 
