@@ -32,15 +32,6 @@ PACKAGES = {
 
 import argparse, os
 
-# _verbose = False
-# _logfile = '/tmp/builder.log'
-
-def pkg_install(args):
-    print("installing packages: ", args)
-
-def pkg_clean(args):
-    pass
-
 def check_packages(packages):
     invalid = False
     for pkg in packages:
@@ -64,7 +55,7 @@ def process_pkgs(args):
 
 class Logger:
     def __init__(self, logfile):
-        print('logfile: ', logfile)
+        print('logfile:', logfile)
 
 class Builder:
 
