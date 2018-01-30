@@ -52,6 +52,32 @@ def process_pkgs(args):
         if pkg in PACKAGES:
             args.func(pkg)
 
+class Color:
+    def __init__(self, msg, color):
+        self.msg = msg
+        self.color = color
+    def __str__(self):
+        return '%s%s\033[0m' % (self.color, self.msg)
+
+class Bold(Color):
+    def __init__(self, msg):
+        Color.__init__(self, msg, '\033[1m')
+
+class Blue(Color):
+    def __init__(self, msg):
+        Color.__init__(self, msg, '\033[34m')
+
+class Red(Color):
+    def __init__(self, msg):
+        Color.__init__(self, msg, '\033[31m')
+
+class Green(Color):
+    def __init__(self, msg):
+        Color.__init__(self, msg, '\033[32m')
+
+class Yellow(Color):
+    def __init__(self, msg):
+        Color.__init__(self, msg, '\033[33m')
 
 class Logger:
     def __init__(self, logfile):
