@@ -79,6 +79,10 @@ class Yellow(Color):
     def __init__(self, msg):
         Color.__init__(self, msg, '\033[33m')
 
+class Gray(Color):
+    def __init__(self, msg):
+        Color.__init__(self, msg, '\033[90m')
+
 class Logger:
     def __init__(self, logfile):
         self._logfilename = logfile
