@@ -52,6 +52,7 @@ PACKAGES="\
     xkeyboard-config \
     xkbcomp \
     xserver \
+    xinit \
     weston \
     "
 
@@ -99,6 +100,7 @@ glproto_GIT="git://git.freedesktop.org/git/xorg/proto/glproto"
 libpciaccess_GIT="git://git.freedesktop.org/git/xorg/lib/libpciaccess"
 pixman_GIT="git://git.freedesktop.org/git/pixman"
 xserver_GIT="git://git.freedesktop.org/git/xorg/xserver"
+xinit_GIT="git://anongit.freedesktop.org/xorg/app/xinit"
 libepoxy_GIT="https://github.com/anholt/libepoxy.git"
 xkbcomp_GIT="git://anongit.freedesktop.org/xorg/app/xkbcomp"
 xkeyboard_config_GIT="git://anongit.freedesktop.org/xkeyboard-config"
