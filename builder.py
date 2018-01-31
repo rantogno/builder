@@ -88,7 +88,8 @@ class Logger:
         self._logfilename = logfile
         self._logfile = open(logfile, 'w')
         self._verbose = verbose
-        print('logfile:', Blue(logfile))
+        print('logfile:', Gray(logfile))
+
     def log(self, msg, endl=False):
         if endl:
             msg = msg + '\n'
