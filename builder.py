@@ -148,9 +148,21 @@ class Builder:
         print('Install')
         self.logger.logln("Starting build.")
 
+        for p in self._pkgs:
+            self._inst_pkg(p)
+
+    def _inst_pkg(self, pkg):
+        self.logger.logln('Installing package: ' + pkg)
+
     def clean(self):
         print('Clean')
         self.logger.logln("Starting cleaning.")
+
+        for p in self._pkgs:
+            self._clean_pkg(p)
+
+    def _clean_pkg(self, pkg):
+        self.logger.logln('Cleaning package: ' + pkg)
 
 def main():
     parser = argparse.ArgumentParser(description='Builder for mesa')
