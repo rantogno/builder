@@ -31,6 +31,7 @@ PACKAGES = {
 }
 
 import argparse, os
+import subprocess
 
 def check_packages(packages):
     invalid = False
@@ -163,6 +164,20 @@ class Builder:
 
     def _clean_pkg(self, pkg):
         self.logger.logln('Cleaning package: ' + pkg)
+
+    def _call(self, cmd):
+        if type(cmd) != type([]) or len(cmd) == 0:
+            raise Exception('Invalid command to _call', cmd)
+
+        self.logger.log(' '.join(cmd))
+        cmd = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True)
+        result = cmd.wait()
+        output = cmd.stdout.read()
+        self.logger.log(output)
+
+        if result != 0:
+            raise Exception('Command failed', cmd, result)
 
 def main():
     parser = argparse.ArgumentParser(description='Builder for mesa')
