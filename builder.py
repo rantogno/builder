@@ -81,7 +81,15 @@ class Yellow(Color):
 
 class Logger:
     def __init__(self, logfile):
-        print('logfile:', logfile)
+        self._logfilename = logfile
+        self._logfile = open(logfile, 'w')
+        print('logfile:', Blue(logfile))
+    def log(self, msg, endl=False):
+        if endl:
+            msg = msg + '\n'
+        self._logfile.write(msg)
+    def logln(self, msg):
+        self.log(msg, endl=True)
 
 class Builder:
 
@@ -109,10 +117,12 @@ class Builder:
         operation[self.__command]()
 
     def install(self):
-        print("Install")
+        print('Install')
+        self.logger.logln("Starting build.")
 
     def clean(self):
         print('Clean')
+        self.logger.logln("Starting cleaning.")
 
 def main():
     parser = argparse.ArgumentParser(description='Builder for mesa')
