@@ -114,6 +114,26 @@ class Builder:
             self.__logfile = args.output
 
         self.__command = args.subparser
+        self.process_packages(args.packages)
+
+    def process_packages(self, packages):
+        self.check_packages(packages)
+
+        if len(packages) == 0:
+            packages = PACKAGES.keys()
+
+        self._pkgs = list(packages)
+
+        print('packages:', Gray(str(self._pkgs)))
+
+    def check_packages(self, packages):
+        invalid = []
+        for pkg in packages:
+            if pkg not in PACKAGES:
+                invalid.append(pkg)
+
+        if len(invalid) > 0:
+            raise Exception('Invalid packages: ' + str(invalid))
 
     def run(self):
         operation = {
