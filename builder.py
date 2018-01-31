@@ -33,26 +33,6 @@ PACKAGES = {
 import argparse, os
 import subprocess
 
-def check_packages(packages):
-    invalid = False
-    for pkg in packages:
-        if pkg not in PACKAGES:
-            print('invalid pkg name:', pkg)
-            invalid = True;
-
-    return not invalid
-
-def process_pkgs(args):
-    if not check_packages(args.packages):
-        return False
-
-    if not process_options(args):
-        return False
-
-    for pkg in args.packages:
-        if pkg in PACKAGES:
-            args.func(pkg)
-
 class Color:
     def __init__(self, msg, color):
         self.msg = msg
