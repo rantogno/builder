@@ -84,14 +84,17 @@ class Gray(Color):
         Color.__init__(self, msg, '\033[90m')
 
 class Logger:
-    def __init__(self, logfile):
+    def __init__(self, logfile, verbose=False):
         self._logfilename = logfile
         self._logfile = open(logfile, 'w')
+        self._verbose = verbose
         print('logfile:', Blue(logfile))
     def log(self, msg, endl=False):
         if endl:
             msg = msg + '\n'
         self._logfile.write(msg)
+        if self._verbose:
+            print(msg, end='')
     def logln(self, msg):
         self.log(msg, endl=True)
 
@@ -102,7 +105,7 @@ class Builder:
         self.__logfile = '/tmp/builder.log'
 
         self.process_options(args)
-        self.logger = Logger(self.__logfile)
+        self.logger = Logger(self.__logfile, self.__verbose)
 
     def process_options(self, args):
         self.__verbose = args.verbose
