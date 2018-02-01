@@ -143,7 +143,7 @@ class Builder:
             raise Exception("%s is not a file" % devdir_file)
 
         self._base_dir = basedir
-        self._conf_dir = os.path.join(basedir, '.config')
+        self._conf_dir = os.path.join(basedir, '.workdir')
         self._src_dir = os.path.join(basedir, 'src')
         self._build_dir = os.path.join(basedir, 'build')
         self._inst_dir = os.path.join(basedir, 'usr')
