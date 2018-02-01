@@ -85,7 +85,10 @@ class Builder:
 
     def __init__(self, args):
         self.__args = args
-        self.__logfile = '/tmp/builder.log'
+
+        self._setup_env()
+
+        self.__logfile = os.path.join(self._base_dir, 'builder.log')
 
         self.process_options(args)
         self.logger = Logger(self.__logfile, self.__verbose)
@@ -139,11 +142,13 @@ class Builder:
         if not os.path.isfile(devdir_file):
             raise Exception("%s is not a file" % devdir_file)
 
+        self._base_dir = basedir
         self._src_dir = os.path.join(basedir, 'src')
         self._build_dir = os.path.join(basedir, 'build')
         self._inst_dir = os.path.join(basedir, 'usr')
 
     def _make_dirs(self):
+        self.logger.logln('Creating src, build and install dirs.')
         os.makedirs(self._src_dir, exist_ok=True)
         os.makedirs(self._build_dir, exist_ok=True)
         os.makedirs(self._inst_dir, exist_ok=True)
@@ -151,7 +156,6 @@ class Builder:
     def install(self):
         print('Install')
 
-        self._setup_env()
         self._make_dirs()
 
         self.logger.logln("Starting build.")
