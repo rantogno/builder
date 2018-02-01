@@ -143,15 +143,30 @@ class Builder:
             raise Exception("%s is not a file" % devdir_file)
 
         self._base_dir = basedir
+        self._conf_dir = os.path.join(basedir, '.config')
         self._src_dir = os.path.join(basedir, 'src')
         self._build_dir = os.path.join(basedir, 'build')
         self._inst_dir = os.path.join(basedir, 'usr')
 
     def _make_dirs(self):
         self.logger.logln('Creating src, build and install dirs.')
+        os.makedirs(self._conf_dir, exist_ok=True)
         os.makedirs(self._src_dir, exist_ok=True)
         os.makedirs(self._build_dir, exist_ok=True)
         os.makedirs(self._inst_dir, exist_ok=True)
+
+    def _process_pkg(self, pkgname, operation):
+        conf = os.path.join(self._conf_dir, pkgname + '.json')
+        srcdir = os.path.join(self._src_dir, pkgname)
+        builddir = os.path.join(self._build_dir, pkgname)
+
+        pkg = {}
+        pkg['name'] = pkgname
+        pkg['conf'] = conf
+        pkg['src'] = srcdir
+        pkg['build'] = builddir
+
+        operation(pkg)
 
     def install(self):
         print('Install')
@@ -161,30 +176,31 @@ class Builder:
         self.logger.logln("Starting build.")
 
         for p in self._pkgs:
-            self._inst_pkg(p)
+            self._process_pkg(p, self._inst_pkg)
 
     def _inst_pkg(self, pkg):
         self.logger.logln('')
-        self.logger.logln('Installing package: ' + pkg)
+        self.logger.logln('Installing package: ' + pkg['name'])
 
-        srcdir = os.path.join(self._src_dir, pkg)
-        builddir = os.path.join(self._build_dir, pkg)
+        self._fetch_pkg(pkg)
+        self._build_pkg(pkg)
 
-        self._fetch_pkg(pkg, srcdir)
-        self._build_pkg(pkg, srcdir, builddir)
+    def _fetch_pkg(self, pkg):
+        pkgname = pkg['name']
+        print('Fetching %s: ' % pkgname, end='', flush=True)
 
-    def _fetch_pkg(self, pkg, srcdir):
-        print('Fetching %s: ' % pkg, end='', flush=True)
-
-        if os.path.exists(srcdir) and os.path.isdir(srcdir):
+        if os.path.exists(pkg['src']) and os.path.isdir(pkg['src']):
             print(Gray('SKIP'))
             return
-        cmd = ['git', 'clone', PACKAGES[pkg]['uri'], srcdir]
+        cmd = ['git', 'clone', PACKAGES[pkgname]['uri'], pkg['src']]
         self._call(cmd)
         print(Green('DONE'))
 
-    def _build_pkg(self, pkg, srcdir, builddir):
-        print('Building %s: ' % pkg, end='')
+    def _build_pkg(self, pkg):
+        pkgname = pkg['name']
+        srcdir = pkg['src']
+        builddir = pkg['build']
+        print('Building %s: ' % pkgname, end='')
 
         builtfile = os.path.exists(os.path.join(builddir, '.builder'))
 
@@ -194,22 +210,22 @@ class Builder:
                 return
 
         if os.path.exists(os.path.join(srcdir, 'meson.build')):
-            self._build_meson(pkg, srcdir, builddir)
+            self._build_meson(pkg)
         elif os.path.exists(os.path.join(srcdir, 'autogen.sh')):
-            self._build_autotools(pkg, srcdir, builddir)
+            self._build_autotools(pkg)
         elif os.path.exists(os.path.join(srcdir, 'CMakeLists.txt')):
-            self._build_cmake(pkg, srcdir, builddir)
+            self._build_cmake(pkg)
 
         print(Green('DONE'))
 
-    def _build_meson(self, pkg, srcdir, builddir):
-        self.logger.logln('Building %s with meson.' % pkg)
+    def _build_meson(self, pkg):
+        self.logger.logln('Building %s with meson.' % pkg['name'])
 
-    def _build_autotools(self, pkg, srcdir, builddir):
-        self.logger.logln('Building %s with autotools.' % pkg)
+    def _build_autotools(self, pkg):
+        self.logger.logln('Building %s with autotools.' % pkg['name'])
 
-    def _build_cmake(self, pkg, srcdir, builddir):
-        self.logger.logln('Building %s with cmake.' % pkg)
+    def _build_cmake(self, pkg):
+        self.logger.logln('Building %s with cmake.' % pkg['name'])
 
     def clean(self):
         print('Clean')
