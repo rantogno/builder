@@ -166,6 +166,24 @@ class Builder:
     def _inst_pkg(self, pkg):
         self.logger.logln('Installing package: ' + pkg)
 
+        srcdir = os.path.join(self._src_dir, pkg)
+
+        self._fetch_pkg(pkg, srcdir)
+
+    def _fetch_pkg(self, pkg, srcdir):
+        print('Fetching %s: ' % pkg, end='', flush=True)
+
+        if os.path.exists(srcdir) and os.path.isdir(srcdir):
+            print(Yellow('SKIP'))
+            return
+        cmd = ['git', 'clone', PACKAGES[pkg]['uri'], srcdir]
+        self._call(cmd)
+        print(Green('DONE'))
+
+    def _build_pkg(self, pkg):
+        print('Building %s: ' % pkg, end='')
+        print(Green('DONE'))
+
     def clean(self):
         print('Clean')
         self.logger.logln("Starting cleaning.")
@@ -180,7 +198,7 @@ class Builder:
         if type(cmd) != type([]) or len(cmd) == 0:
             raise Exception('Invalid command to _call', cmd)
 
-        self.logger.log(' '.join(cmd))
+        self.logger.logln(' '.join(cmd))
         cmd = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True)
         result = cmd.wait()
