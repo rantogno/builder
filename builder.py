@@ -31,6 +31,7 @@ PACKAGES = {
 }
 
 import argparse, os
+import os.path
 import subprocess
 
 class Color:
@@ -125,8 +126,34 @@ class Builder:
 
         operation[self.__command]()
 
+    def _setup_env(self):
+        env = os.environ.copy()
+        basedir = os.path.abspath(os.path.curdir)
+
+        devdir_file = os.path.join(basedir, '.builddir')
+
+        if not os.path.exists(devdir_file):
+            raise Exception("'.builddir' file doesn't exist under "
+                    "current directory: '%s'" % basedir)
+
+        if not os.path.isfile(devdir_file):
+            raise Exception("%s is not a file" % devdir_file)
+
+        self._src_dir = os.path.join(basedir, 'src')
+        self._build_dir = os.path.join(basedir, 'build')
+        self._inst_dir = os.path.join(basedir, 'usr')
+
+    def _make_dirs(self):
+        os.makedirs(self._src_dir, exist_ok=True)
+        os.makedirs(self._build_dir, exist_ok=True)
+        os.makedirs(self._inst_dir, exist_ok=True)
+
     def install(self):
         print('Install')
+
+        self._setup_env()
+        self._make_dirs()
+
         self.logger.logln("Starting build.")
 
         for p in self._pkgs:
