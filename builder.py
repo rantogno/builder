@@ -164,25 +164,52 @@ class Builder:
             self._inst_pkg(p)
 
     def _inst_pkg(self, pkg):
+        self.logger.logln('')
         self.logger.logln('Installing package: ' + pkg)
 
         srcdir = os.path.join(self._src_dir, pkg)
+        builddir = os.path.join(self._build_dir, pkg)
 
         self._fetch_pkg(pkg, srcdir)
+        self._build_pkg(pkg, srcdir, builddir)
 
     def _fetch_pkg(self, pkg, srcdir):
         print('Fetching %s: ' % pkg, end='', flush=True)
 
         if os.path.exists(srcdir) and os.path.isdir(srcdir):
-            print(Yellow('SKIP'))
+            print(Gray('SKIP'))
             return
         cmd = ['git', 'clone', PACKAGES[pkg]['uri'], srcdir]
         self._call(cmd)
         print(Green('DONE'))
 
-    def _build_pkg(self, pkg):
+    def _build_pkg(self, pkg, srcdir, builddir):
         print('Building %s: ' % pkg, end='')
+
+        builtfile = os.path.exists(os.path.join(builddir, '.builder'))
+
+        if os.path.exists(builddir) and os.path.isdir(builddir):
+            if os.path.exists(builtfile) and os.path.isdir(builtfile):
+                print(Gray('SKIP'))
+                return
+
+        if os.path.exists(os.path.join(srcdir, 'meson.build')):
+            self._build_meson(pkg, srcdir, builddir)
+        elif os.path.exists(os.path.join(srcdir, 'autogen.sh')):
+            self._build_autotools(pkg, srcdir, builddir)
+        elif os.path.exists(os.path.join(srcdir, 'CMakeLists.txt')):
+            self._build_cmake(pkg, srcdir, builddir)
+
         print(Green('DONE'))
+
+    def _build_meson(self, pkg, srcdir, builddir):
+        self.logger.logln('Building %s with meson.' % pkg)
+
+    def _build_autotools(self, pkg, srcdir, builddir):
+        self.logger.logln('Building %s with autotools.' % pkg)
+
+    def _build_cmake(self, pkg, srcdir, builddir):
+        self.logger.logln('Building %s with cmake.' % pkg)
 
     def clean(self):
         print('Clean')
