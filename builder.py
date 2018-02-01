@@ -33,6 +33,7 @@ PACKAGES = {
 import argparse, os
 import os.path
 import subprocess
+import json
 
 class Color:
     def __init__(self, msg, color):
@@ -155,16 +156,31 @@ class Builder:
         os.makedirs(self._build_dir, exist_ok=True)
         os.makedirs(self._inst_dir, exist_ok=True)
 
+    def _create_pkg_conf(self, pkgname):
+            pkg = {}
+            pkg['name'] = pkgname
+            pkg['conf'] = conf
+            pkg['src'] = os.path.join(self._src_dir, pkgname)
+            pkg['build'] = os.path.join(self._build_dir, pkgname)
+            pkg['state'] = {
+                    'configured': False,
+                    'built': False,
+                    'installed': False,
+                }
+
     def _process_pkg(self, pkgname, operation):
         conf = os.path.join(self._conf_dir, pkgname + '.json')
-        srcdir = os.path.join(self._src_dir, pkgname)
-        builddir = os.path.join(self._build_dir, pkgname)
 
-        pkg = {}
-        pkg['name'] = pkgname
-        pkg['conf'] = conf
-        pkg['src'] = srcdir
-        pkg['build'] = builddir
+        if os.path.exists(conf):
+            conffile = open(conf)
+            pkg = json.load(conffile)
+            self.logger.logln('Loading config for: %s' % pkgname)
+            self.logger.logln(str(pkg))
+        else:
+            pkg = self._create_pkg_conf(pkgname)
+            self.logger.logln('Creating new config for: %s' % pkgname)
+            conffile = open(conf, 'w')
+            json.dump(pkg, conffile, indent=4)
 
         operation(pkg)
 
