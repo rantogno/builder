@@ -256,6 +256,9 @@ class Builder:
         self._call(cmd)
         print(Green('DONE'))
 
+    def _update_json(self, pkg):
+        json.dump(pkg, pkg['conf'], indent=4)
+
     def _build_pkg(self, pkg):
 
         if pkg['config'].get('skipinstall'):
@@ -281,6 +284,9 @@ class Builder:
         elif os.path.exists(os.path.join(srcdir, 'CMakeLists.txt')):
             self._build_cmake(pkg)
 
+        pkg['state']['built'] = True
+        self._update_json(pkg)
+
         print(Green('DONE'))
 
     def _get_build_conf(self, pkg, buildtype):
@@ -293,7 +299,7 @@ class Builder:
                 pkg['config'][buildtype] = buildconf
                 # if 'meson' options wasn't set into json (or it was None), but
                 # it was set now in the default config, save it into json.
-                json.dump(pkg, pkg['conf'], indent=4)
+                self._update_json(pkg)
             else:
                 buildconf = ''
 
