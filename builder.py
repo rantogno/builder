@@ -70,7 +70,7 @@ class Gray(Color):
 class Logger:
     def __init__(self, logfile, verbose=False):
         self._logfilename = logfile
-        self._logfile = open(logfile, 'w')
+        self._logfile = open(logfile, 'w', buffering=1)
         self._verbose = verbose
         print('logfile:', Gray(logfile))
 
@@ -82,6 +82,9 @@ class Logger:
             print(msg, end='')
     def logln(self, msg):
         self.log(msg, endl=True)
+
+    def get_file(self):
+        return self._logfile
 
 class Builder:
 
@@ -289,11 +292,9 @@ class Builder:
             raise Exception('Invalid command to _call', cmd)
 
         self.logger.logln(' '.join(cmd))
-        cmd = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+        cmd = subprocess.Popen(cmd, stdout=self.logger.get_file(),
                 stderr=subprocess.STDOUT, universal_newlines=True)
         result = cmd.wait()
-        output = cmd.stdout.read()
-        self.logger.log(output)
 
         if result != 0:
             raise Exception('Command failed', cmd, result)
