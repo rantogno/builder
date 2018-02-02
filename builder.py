@@ -173,8 +173,6 @@ class Builder:
 
         env['CMAKE_PREFIX_PATH'] = usr
 
-        print(env)
-
         self._env = env
 
     def _make_dirs(self):
