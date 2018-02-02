@@ -316,37 +316,36 @@ class Builder:
             cmd.extend(mesonopts.split())
         cmd.append(pkg['build'])
 
-        print(cmd)
-        self._call(cmd, pkg['src'], self._env)
+        self._call(cmd, pkg['src'])
 
     def _call_configure(self, pkg):
         autoopts = self._get_build_conf(pkg, 'autotools')
         self.logger.logln('Build opts: "%s"' % autoopts)
 
         cmd = ['./autogen.sh']
-        self._call(cmd, pkg['src'], self._env)
+        self._call(cmd, pkg['src'])
 
         os.makedirs(pkg['build'], exist_ok=True)
         cmd = ['%s/configure' % pkg['src']]
         cmd.append('--prefix=%s' % self._inst_dir)
         if autoopts:
             cmd.extend(autoopts.split())
-        self._call(cmd, pkg['build'], self._env)
+        self._call(cmd, pkg['build'])
 
     def _call_ninja(self, pkg):
         cmd = ['ninja']
-        self._call(cmd, pkg['build'], self._env)
+        self._call(cmd, pkg['build'])
 
         cmd.append('install')
-        self._call(cmd, pkg['build'], self._env)
+        self._call(cmd, pkg['build'])
 
     def _call_make(self, pkg):
         cmd = ['make']
         cmd.append('-j%d' % os.cpu_count())
-        self._call(cmd, pkg['build'], self._env)
+        self._call(cmd, pkg['build'])
 
         cmd.append('install')
-        self._call(cmd, pkg['build'], self._env)
+        self._call(cmd, pkg['build'])
 
     def _call_cmake(self, pkg):
         cmakeopts = self._get_build_conf(pkg, 'cmake')
@@ -360,7 +359,7 @@ class Builder:
         if cmakeopts:
             cmd.extend(cmakeopts.split())
 
-        self._call(cmd, pkg['build'], self._env)
+        self._call(cmd, pkg['build'])
 
     def _build_autotools(self, pkg):
         self.logger.logln('Building %s with autotools.' % pkg['name'])
@@ -376,6 +375,7 @@ class Builder:
 
     def clean(self):
         print('Clean')
+
         self.logger.logln("Starting cleaning.")
 
         for p in self._pkgs:
@@ -385,6 +385,9 @@ class Builder:
         self.logger.logln('Cleaning package: ' + pkg)
 
     def _call(self, cmd, cwd=None, env=None):
+        if env is None:
+            env = self._env
+
         if type(cmd) != type([]) or len(cmd) == 0:
             raise Exception('Invalid command to _call', cmd)
 
