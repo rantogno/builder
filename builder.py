@@ -324,6 +324,9 @@ class Builder:
 
         self._call(cmd, pkg['src'])
 
+        pkg['state']['configured'] = True
+        self._update_json(pkg)
+
     def _call_configure(self, pkg):
         autoopts = self._get_build_conf(pkg, 'autotools')
         self.logger.logln('Build opts: "%s"' % autoopts)
@@ -337,6 +340,9 @@ class Builder:
         if autoopts:
             cmd.extend(autoopts.split())
         self._call(cmd, pkg['build'])
+
+        pkg['state']['configured'] = True
+        self._update_json(pkg)
 
     def _call_ninja(self, pkg):
         cmd = ['ninja']
@@ -366,6 +372,9 @@ class Builder:
             cmd.extend(cmakeopts.split())
 
         self._call(cmd, pkg['build'])
+
+        pkg['state']['configured'] = True
+        self._update_json(pkg)
 
     def _build_autotools(self, pkg):
         self.logger.logln('Building %s with autotools.' % pkg['name'])
