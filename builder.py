@@ -257,7 +257,9 @@ class Builder:
         print(Green('DONE'))
 
     def _update_json(self, pkg):
-        json.dump(pkg, pkg['conf'], indent=4)
+        conffile = open(pkg['conf'], 'w')
+        json.dump(pkg, conffile, indent=4)
+        conffile.close()
 
     def _build_pkg(self, pkg):
 
