@@ -159,7 +159,7 @@ class Builder:
     def _create_pkg_conf(self, pkgname):
             pkg = {}
             pkg['name'] = pkgname
-            pkg['conf'] = conf
+            pkg['conf'] = os.path.join(self._conf_dir, pkgname + '.json')
             pkg['src'] = os.path.join(self._src_dir, pkgname)
             pkg['build'] = os.path.join(self._build_dir, pkgname)
             pkg['state'] = {
@@ -167,6 +167,7 @@ class Builder:
                     'built': False,
                     'installed': False,
                 }
+            return pkg
 
     def _process_pkg(self, pkgname, operation):
         conf = os.path.join(self._conf_dir, pkgname + '.json')
