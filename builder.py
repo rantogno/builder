@@ -86,6 +86,234 @@ class Logger:
     def get_file(self):
         return self._logfile
 
+class Pkg:
+    def __init__(self, name, basedir, logger, env):
+        self.name = name
+        self._logger = logger
+        self._env = env
+
+        confdir = os.path.join(basedir, '.workdir')
+        self.jsonpath = os.path.join(confdir, name + '.json')
+        if os.path.exists(self.jsonpath):
+            self._load_from(self.jsonpath)
+        else:
+            self._create_new(basedir)
+
+        self._inst_dir = os.path.join(basedir, 'usr')
+
+    def _create_new(self, basedir):
+        self._logger.logln('Creating new config for: %s' % self.name)
+
+        srcdir = os.path.join(basedir, 'src')
+        builddir = os.path.join(basedir, 'build')
+        workdir = os.path.join(basedir, '.workdir')
+
+        self.srcpath = os.path.join(srcdir, self.name)
+        self.buildpath = os.path.join(builddir, self.name)
+
+        pkgconf = PACKAGES[self.name]
+
+        self._skipinstall = pkgconf.get('skipinstall', False)
+
+        self._config = {
+            'meson': pkgconf.get('meson'),
+            'autotools': pkgconf.get('autotools'),
+            'cmake': pkgconf.get('cmake'),
+        }
+
+        self._configured = False
+        self._built = False
+
+        self.update()
+
+    def _load_from(self, jsonpath):
+        jsonfile = open(jsonpath)
+        pkg = json.load(jsonfile)
+
+        self._logger.logln('Loading config for: %s' % self.name)
+        self._logger.logln(str(pkg))
+
+        if not '__builder__' in pkg:
+            raise Exception('%s is not a "Pkg" config file' % jsonpath)
+
+        self.srcpath = pkg['srcpath']
+        self.buildpath = pkg['buildpath']
+        self._config = pkg['config']
+        self._configured = pkg['state']['configured']
+        self._built = pkg['state']['built']
+        self._skipinstall = pkg['skipinstall']
+
+    def get_conf(self, conftype):
+        return self._config.get(conftype)
+
+    def _to_json(self):
+        json_dict = {
+            '__builder__': True,
+            'name': self.name,
+            'srcpath': self.srcpath,
+            'buildpath': self.buildpath,
+            'config': self._config,
+            'state': {
+                'configured': self._configured,
+                'built': self._built,
+            },
+            'skipinstall': self._skipinstall,
+        }
+
+        return json_dict
+
+    def update(self):
+        jsonfile = open(self.jsonpath, 'w')
+        json.dump(self, jsonfile, indent=4, default=Pkg._to_json)
+        jsonfile.close()
+
+    def __str__(self):
+        return self.name
+
+    def _call(self, cmd, cwd=None, env=None):
+        if env is None:
+            env = self._env
+
+        if type(cmd) != type([]) or len(cmd) == 0:
+            raise Exception('Invalid command to _call', cmd)
+
+        self._logger.logln(' '.join(cmd))
+        cmdprocess = subprocess.Popen(cmd, stdout=self._logger.get_file(),
+                stderr=subprocess.STDOUT, universal_newlines=True,
+                cwd=cwd, env=env)
+        result = cmdprocess.wait()
+
+        if result != 0:
+            raise Exception('Command failed', cmd, result)
+
+    def _fetch(self):
+        print('Fetching %s: ' % self.name, end='', flush=True)
+
+        if os.path.exists(self.srcpath) and os.path.isdir(self.srcpath):
+            print(Gray('SKIP'))
+            return
+        cmd = ['git', 'clone', PACKAGES[pkgname]['uri'], self.srcpath]
+        self._call(cmd)
+        print(Green('DONE'))
+
+    def _build(self):
+        if self._skipinstall:
+            self._logger.logln('Skipping install of "%s"' % self.name)
+            return
+
+        print('Building %s: ' % self.name, end='')
+
+        if self._built:
+            print(Gray('SKIP'))
+            return
+
+        if os.path.exists(os.path.join(self.srcpath, 'meson.build')):
+            self._build_meson()
+        elif os.path.exists(os.path.join(self.srcpath, 'autogen.sh')):
+            self._build_autotools()
+        elif os.path.exists(os.path.join(self.srcpath, 'CMakeLists.txt')):
+            self._build_cmake()
+
+        self._built = True
+        self.update()
+
+        print(Green('DONE'))
+
+    def _build_meson(self):
+        self._logger.logln('Building %s with meson.' % self.name)
+
+        self._call_meson()
+        self._call_ninja()
+
+    def _build_autotools(self):
+        self._logger.logln('Building %s with autotools.' % self.name)
+
+        self._call_configure()
+        self._call_make()
+
+    def _build_cmake(self):
+        self._logger.logln('Building %s with cmake.' % self.name)
+
+        self._call_cmake()
+        self._call_ninja()
+
+    def _call_meson(self):
+        mesonopts = self.get_conf('meson')
+        self._logger.logln('Build opts: "%s"' % mesonopts)
+
+        cmd = ['meson']
+        cmd.append('--prefix=%s' % self._inst_dir)
+        if mesonopts:
+            cmd.extend(mesonopts.split())
+        cmd.append(self.buildpath)
+
+        self._call(cmd, self.srcpath)
+
+        self._configured = True
+        self.update()
+
+    def _call_ninja(self):
+        cmd = ['ninja']
+        self._call(cmd, self.buildpath)
+
+        cmd.append('install')
+        self._call(cmd, self.buildpath)
+
+    def _call_configure(self):
+        autoopts = self.get_conf('autotools')
+        self._logger.logln('Build opts: "%s"' % autoopts)
+
+        cmd = ['./autogen.sh']
+        self._call(cmd, self.srcpath)
+
+        os.makedirs(self.buildpath, exist_ok=True)
+        cmd = ['%s/configure' % self.srcpath]
+        cmd.append('--prefix=%s' % self._inst_dir)
+        if autoopts:
+            cmd.extend(autoopts.split())
+        self._call(cmd, self.buildpath)
+
+        self._configured = True
+        self.update()
+
+    def _call_make(self):
+        cmd = ['make']
+        cmd.append('-j%d' % os.cpu_count())
+        self._call(cmd, self.buildpath)
+
+        cmd.append('install')
+        self._call(cmd, self.buildpath)
+
+    def _call_cmake(self):
+        cmakeopts = self.get_conf('cmake')
+        self._logger.logln('Build opts: "%s"' % cmakeopts)
+
+        os.makedirs(self.buildpath, exist_ok=True)
+        cmd = ['cmake']
+        cmd.append(self.srcpath)
+        cmd.append('-DCMAKE_INSTALL_PREFIX=%s' % self._inst_dir)
+        cmd.append('-GNinja')
+        if cmakeopts:
+            cmd.extend(cmakeopts.split())
+
+        self._call(cmd, self.buildpath)
+
+        self._configured = True
+        self.update()
+
+    def install(self):
+        self._logger.logln('')
+        self._logger.logln('Installing package: ' + self.name)
+
+        self._fetch()
+        self._build()
+
+    def clean(self):
+        self._logger.logln('')
+        self._logger.logln('Cleaning package: ' + self.name)
+        cmd = ['git', 'clean', '-fdx']
+        self._call(cmd, self.srcpath)
+
 class Builder:
 
     def __init__(self, args):
@@ -147,7 +375,7 @@ class Builder:
             raise Exception("%s is not a file" % devdir_file)
 
         self._base_dir = basedir
-        self._conf_dir = os.path.join(basedir, '.workdir')
+        self._work_dir = os.path.join(basedir, 'src')
         self._src_dir = os.path.join(basedir, 'src')
         self._build_dir = os.path.join(basedir, 'build')
         self._inst_dir = os.path.join(basedir, 'usr')
@@ -181,50 +409,16 @@ class Builder:
 
     def _make_dirs(self):
         self.logger.logln('Creating src, build and install dirs.')
-        os.makedirs(self._conf_dir, exist_ok=True)
+        os.makedirs(self._work_dir, exist_ok=True)
         os.makedirs(self._src_dir, exist_ok=True)
         os.makedirs(self._build_dir, exist_ok=True)
         os.makedirs(self._inst_dir, exist_ok=True)
         os.makedirs(self._env['ACLOCAL_PATH'], exist_ok=True)
 
-    def _create_pkg_conf(self, pkgname):
-            pkg = {}
-            pkg['name'] = pkgname
-            pkg['conf'] = os.path.join(self._conf_dir, pkgname + '.json')
-            pkg['src'] = os.path.join(self._src_dir, pkgname)
-            pkg['build'] = os.path.join(self._build_dir, pkgname)
-
-            pkgconf = PACKAGES[pkgname]
-            skipinstall = pkgconf.get('skipinstall', False)
-            pkg['config'] = {
-                    'skipinstall': pkgconf.get('skipinstall', False),
-                    'meson': pkgconf.get('meson'),
-                    'autotools': pkgconf.get('autotools'),
-                    'cmake': pkgconf.get('cmake'),
-                }
-
-            pkg['state'] = {
-                    'configured': False,
-                    'built': False,
-                    'installed': False,
-                }
-
-            return pkg
-
     def _process_pkg(self, pkgname, operation):
         self.logger.logln('')
-        conf = os.path.join(self._conf_dir, pkgname + '.json')
 
-        if os.path.exists(conf):
-            conffile = open(conf)
-            pkg = json.load(conffile)
-            self.logger.logln('Loading config for: %s' % pkgname)
-            self.logger.logln(str(pkg))
-        else:
-            pkg = self._create_pkg_conf(pkgname)
-            self.logger.logln('Creating new config for: %s' % pkgname)
-            conffile = open(conf, 'w')
-            json.dump(pkg, conffile, indent=4)
+        pkg = Pkg(pkgname, self._base_dir, self.logger, self._env)
 
         operation(pkg)
 
@@ -239,159 +433,8 @@ class Builder:
             self._process_pkg(p, self._inst_pkg)
 
     def _inst_pkg(self, pkg):
-        self.logger.logln('')
-        self.logger.logln('Installing package: ' + pkg['name'])
-
-        self._fetch_pkg(pkg)
-        self._build_pkg(pkg)
-
-    def _fetch_pkg(self, pkg):
-        pkgname = pkg['name']
-        print('Fetching %s: ' % pkgname, end='', flush=True)
-
-        if os.path.exists(pkg['src']) and os.path.isdir(pkg['src']):
-            print(Gray('SKIP'))
-            return
-        cmd = ['git', 'clone', PACKAGES[pkgname]['uri'], pkg['src']]
-        self._call(cmd)
-        print(Green('DONE'))
-
-    def _update_json(self, pkg):
-        conffile = open(pkg['conf'], 'w')
-        json.dump(pkg, conffile, indent=4)
-        conffile.close()
-
-    def _build_pkg(self, pkg):
-
-        if pkg['config'].get('skipinstall'):
-            self.logger.logln('Skipping install of "%s"' % pkg['name'])
-            return
-
-        if pkg['state'].get('built'):
-            return
-
-        pkgname = pkg['name']
-        srcdir = pkg['src']
-        builddir = pkg['build']
-        print('Building %s: ' % pkgname, end='')
-
-        builtfile = os.path.exists(os.path.join(builddir, '.builder'))
-
-        if os.path.exists(builddir) and os.path.isdir(builddir):
-            if os.path.exists(builtfile) and os.path.isdir(builtfile):
-                print(Gray('SKIP'))
-                return
-
-        if os.path.exists(os.path.join(srcdir, 'meson.build')):
-            self._build_meson(pkg)
-        elif os.path.exists(os.path.join(srcdir, 'autogen.sh')):
-            self._build_autotools(pkg)
-        elif os.path.exists(os.path.join(srcdir, 'CMakeLists.txt')):
-            self._build_cmake(pkg)
-
-        pkg['state']['built'] = True
-        self._update_json(pkg)
-
-        print(Green('DONE'))
-
-    def _get_build_conf(self, pkg, buildtype):
-        pkgname = pkg['name']
-
-        buildconf = pkg['config'].get(buildtype)
-        if buildconf is None:
-            buildconf = PACKAGES[pkgname].get(buildtype)
-            if buildconf is not None:
-                pkg['config'][buildtype] = buildconf
-                # if 'meson' options wasn't set into json (or it was None), but
-                # it was set now in the default config, save it into json.
-                self._update_json(pkg)
-            else:
-                buildconf = ''
-
-        return buildconf
-
-    def _build_meson(self, pkg):
-        pkgname = pkg['name']
-        self.logger.logln('Building %s with meson.' % pkgname)
-
-        self._call_meson(pkg)
-        self._call_ninja(pkg)
-
-    def _call_meson(self, pkg):
-        mesonopts = self._get_build_conf(pkg, 'meson')
-        self.logger.logln('Build opts: "%s"' % mesonopts)
-
-        cmd = ['meson']
-        cmd.append('--prefix=%s' % self._inst_dir)
-        if mesonopts:
-            cmd.extend(mesonopts.split())
-        cmd.append(pkg['build'])
-
-        self._call(cmd, pkg['src'])
-
-        pkg['state']['configured'] = True
-        self._update_json(pkg)
-
-    def _call_configure(self, pkg):
-        autoopts = self._get_build_conf(pkg, 'autotools')
-        self.logger.logln('Build opts: "%s"' % autoopts)
-
-        cmd = ['./autogen.sh']
-        self._call(cmd, pkg['src'])
-
-        os.makedirs(pkg['build'], exist_ok=True)
-        cmd = ['%s/configure' % pkg['src']]
-        cmd.append('--prefix=%s' % self._inst_dir)
-        if autoopts:
-            cmd.extend(autoopts.split())
-        self._call(cmd, pkg['build'])
-
-        pkg['state']['configured'] = True
-        self._update_json(pkg)
-
-    def _call_ninja(self, pkg):
-        cmd = ['ninja']
-        self._call(cmd, pkg['build'])
-
-        cmd.append('install')
-        self._call(cmd, pkg['build'])
-
-    def _call_make(self, pkg):
-        cmd = ['make']
-        cmd.append('-j%d' % os.cpu_count())
-        self._call(cmd, pkg['build'])
-
-        cmd.append('install')
-        self._call(cmd, pkg['build'])
-
-    def _call_cmake(self, pkg):
-        cmakeopts = self._get_build_conf(pkg, 'cmake')
-        self.logger.logln('Build opts: "%s"' % cmakeopts)
-
-        os.makedirs(pkg['build'], exist_ok=True)
-        cmd = ['cmake']
-        cmd.append(pkg['src'])
-        cmd.append('-DCMAKE_INSTALL_PREFIX=%s' % self._inst_dir)
-        cmd.append('-GNinja')
-        if cmakeopts:
-            cmd.extend(cmakeopts.split())
-
-        self._call(cmd, pkg['build'])
-
-        pkg['state']['configured'] = True
-        self._update_json(pkg)
-
-    def _build_autotools(self, pkg):
-        self.logger.logln('Building %s with autotools.' % pkg['name'])
-
-        self._call_configure(pkg)
-        self._call_make(pkg)
-
-    def _build_cmake(self, pkg):
-        self.logger.logln('Building %s with cmake.' % pkg['name'])
-
-        self._call_cmake(pkg)
-        self._call_ninja(pkg)
+        pkg.install()
+        return
 
     def clean(self):
         print('Clean')
@@ -403,24 +446,7 @@ class Builder:
 
     def _clean_pkg(self, pkg):
         self.logger.logln('Cleaning package: ' + pkg['name'])
-        cmd = ['git', 'clean', '-fdx']
-        self._call(cmd, pkg['src'])
-
-    def _call(self, cmd, cwd=None, env=None):
-        if env is None:
-            env = self._env
-
-        if type(cmd) != type([]) or len(cmd) == 0:
-            raise Exception('Invalid command to _call', cmd)
-
-        self.logger.logln(' '.join(cmd))
-        cmdprocess = subprocess.Popen(cmd, stdout=self.logger.get_file(),
-                stderr=subprocess.STDOUT, universal_newlines=True,
-                cwd=cwd, env=env)
-        result = cmdprocess.wait()
-
-        if result != 0:
-            raise Exception('Command failed', cmd, result)
+        pkg.clean()
 
 def main():
     parser = argparse.ArgumentParser(description='Builder for mesa')
