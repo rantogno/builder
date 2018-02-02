@@ -379,10 +379,12 @@ class Builder:
         self.logger.logln("Starting cleaning.")
 
         for p in self._pkgs:
-            self._clean_pkg(p)
+            self._process_pkg(p, self._clean_pkg)
 
     def _clean_pkg(self, pkg):
-        self.logger.logln('Cleaning package: ' + pkg)
+        self.logger.logln('Cleaning package: ' + pkg['name'])
+        cmd = ['git', 'clean', '-fdx']
+        self._call(cmd, pkg['src'])
 
     def _call(self, cmd, cwd=None, env=None):
         if env is None:
