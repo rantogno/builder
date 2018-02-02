@@ -24,6 +24,7 @@ PACKAGES = {
             },
         'piglit': {
             'uri': 'git://anongit.freedesktop.org/piglit',
+            'skipinstall': True,
             },
         'igt-gpu-tools': {
             'uri': 'git://anongit.freedesktop.org/drm/igt-gpu-tools',
@@ -241,6 +242,10 @@ class Builder:
         print(Green('DONE'))
 
     def _build_pkg(self, pkg):
+
+        if 'skipinstall' in pkg and pkg['skipinstall']:
+            return
+
         pkgname = pkg['name']
         srcdir = pkg['src']
         builddir = pkg['build']
