@@ -191,12 +191,22 @@ class Builder:
             pkg['conf'] = os.path.join(self._conf_dir, pkgname + '.json')
             pkg['src'] = os.path.join(self._src_dir, pkgname)
             pkg['build'] = os.path.join(self._build_dir, pkgname)
-            pkg['skipinstall'] = PACKAGES[pkgname].get('skipinstall', False)
+
+            pkgconf = PACKAGES[pkgname]
+            skipinstall = pkgconf.get('skipinstall', False)
+            pkg['config'] = {
+                    'skipinstall': pkgconf.get('skipinstall', False),
+                    'meson': pkgconf.get('meson'),
+                    'autotools': pkgconf.get('autotools'),
+                    'cmake': pkgconf.get('cmake'),
+                }
+
             pkg['state'] = {
                     'configured': False,
                     'built': False,
                     'installed': False,
                 }
+
             return pkg
 
     def _process_pkg(self, pkgname, operation):
@@ -246,7 +256,8 @@ class Builder:
 
     def _build_pkg(self, pkg):
 
-        if pkg.get('skipinstall'):
+        if pkg['config'].get('skipinstall'):
+            self.logger.logln('Skipping install of "%s"' % pkg['name'])
             return
 
         pkgname = pkg['name']
@@ -269,6 +280,22 @@ class Builder:
             self._build_cmake(pkg)
 
         print(Green('DONE'))
+
+    def _get_build_conf(self, pkg, buildtype):
+        pkgname = pkg['name']
+
+        buildconf = pkg['config'].get(buildtype)
+        if buildconf is None:
+            buildconf = PACKAGES[pkgname].get(buildtype)
+            if buildconf is not None:
+                pkg['config'][buildtype] = buildconf
+                # if 'meson' options wasn't set into json (or it was None), but
+                # it was set now in the default config, save it into json.
+                json.dump(pkg, pkg['conf'], indent=4)
+            else:
+                buildconf = ''
+
+        return buildconf
 
     def _build_meson(self, pkg):
         self.logger.logln('Building %s with meson.' % pkg['name'])
