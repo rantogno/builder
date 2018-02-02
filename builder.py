@@ -191,6 +191,7 @@ class Builder:
             pkg['conf'] = os.path.join(self._conf_dir, pkgname + '.json')
             pkg['src'] = os.path.join(self._src_dir, pkgname)
             pkg['build'] = os.path.join(self._build_dir, pkgname)
+            pkg['skipinstall'] = PACKAGES[pkgname].get('skipinstall', False)
             pkg['state'] = {
                     'configured': False,
                     'built': False,
