@@ -131,7 +131,6 @@ class Builder:
         operation[self.__command]()
 
     def _setup_env(self):
-        env = os.environ.copy()
         basedir = os.path.abspath(os.path.curdir)
 
         devdir_file = os.path.join(basedir, '.builddir')
@@ -148,6 +147,34 @@ class Builder:
         self._src_dir = os.path.join(basedir, 'src')
         self._build_dir = os.path.join(basedir, 'build')
         self._inst_dir = os.path.join(basedir, 'usr')
+
+        self._setup_envvars()
+
+    def _setup_envvars(self):
+        env = os.environ.copy()
+        usr = self._inst_dir
+
+        libdir = os.path.join(usr, 'lib')
+        lib64dir = os.path.join(usr, 'lib64')
+        env['LD_LIBRARY_PATH'] = ':'.join((libdir, lib64dir))
+
+        pkglib = os.path.join(libdir, 'pkgconfig')
+        pkg64lib = os.path.join(lib64dir, 'pkgconfig')
+        pkgshare = os.path.join(usr, 'share/pkgconfig')
+        env['PKG_CONFIG_PATH'] = ':'.join((pkglib, pkg64lib, pkgshare))
+
+        path = os.path.join(usr, 'bin')
+        env['PATH'] = ':'.join((path, env['PATH']))
+
+        aclocalpath = os.path.join(usr, 'share/local')
+        env['ACLOCAL_PATH'] = aclocalpath
+        env['ACLOCAL'] = 'aclocal -I ' + aclocalpath
+
+        env['CMAKE_PREFIX_PATH'] = usr
+
+        print(env)
+
+        self._env = env
 
     def _make_dirs(self):
         self.logger.logln('Creating src, build and install dirs.')
