@@ -199,6 +199,7 @@ class Builder:
             return pkg
 
     def _process_pkg(self, pkgname, operation):
+        self.logger.logln('')
         conf = os.path.join(self._conf_dir, pkgname + '.json')
 
         if os.path.exists(conf):
@@ -244,7 +245,7 @@ class Builder:
 
     def _build_pkg(self, pkg):
 
-        if 'skipinstall' in pkg and pkg['skipinstall']:
+        if pkg.get('skipinstall'):
             return
 
         pkgname = pkg['name']
