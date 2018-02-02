@@ -175,6 +175,7 @@ class Builder:
         env['ACLOCAL'] = 'aclocal -I ' + aclocalpath
 
         env['CMAKE_PREFIX_PATH'] = usr
+        env['NOCONFIGURE'] = '1'
 
         self._env = env
 
@@ -184,6 +185,7 @@ class Builder:
         os.makedirs(self._src_dir, exist_ok=True)
         os.makedirs(self._build_dir, exist_ok=True)
         os.makedirs(self._inst_dir, exist_ok=True)
+        os.makedirs(self._env['ACLOCAL_PATH'], exist_ok=True)
 
     def _create_pkg_conf(self, pkgname):
             pkg = {}
@@ -298,13 +300,79 @@ class Builder:
         return buildconf
 
     def _build_meson(self, pkg):
-        self.logger.logln('Building %s with meson.' % pkg['name'])
+        pkgname = pkg['name']
+        self.logger.logln('Building %s with meson.' % pkgname)
+
+        self._call_meson(pkg)
+        self._call_ninja(pkg)
+
+    def _call_meson(self, pkg):
+        mesonopts = self._get_build_conf(pkg, 'meson')
+        self.logger.logln('Build opts: "%s"' % mesonopts)
+
+        cmd = ['meson']
+        cmd.append('--prefix=%s' % self._inst_dir)
+        if mesonopts:
+            cmd.extend(mesonopts.split())
+        cmd.append(pkg['build'])
+
+        print(cmd)
+        self._call(cmd, pkg['src'], self._env)
+
+    def _call_configure(self, pkg):
+        autoopts = self._get_build_conf(pkg, 'autotools')
+        self.logger.logln('Build opts: "%s"' % autoopts)
+
+        cmd = ['./autogen.sh']
+        self._call(cmd, pkg['src'], self._env)
+
+        os.makedirs(pkg['build'], exist_ok=True)
+        cmd = ['%s/configure' % pkg['src']]
+        cmd.append('--prefix=%s' % self._inst_dir)
+        if autoopts:
+            cmd.extend(autoopts.split())
+        self._call(cmd, pkg['build'], self._env)
+
+    def _call_ninja(self, pkg):
+        cmd = ['ninja']
+        self._call(cmd, pkg['build'], self._env)
+
+        cmd.append('install')
+        self._call(cmd, pkg['build'], self._env)
+
+    def _call_make(self, pkg):
+        cmd = ['make']
+        cmd.append('-j%d' % os.cpu_count())
+        self._call(cmd, pkg['build'], self._env)
+
+        cmd.append('install')
+        self._call(cmd, pkg['build'], self._env)
+
+    def _call_cmake(self, pkg):
+        cmakeopts = self._get_build_conf(pkg, 'cmake')
+        self.logger.logln('Build opts: "%s"' % cmakeopts)
+
+        os.makedirs(pkg['build'], exist_ok=True)
+        cmd = ['cmake']
+        cmd.append(pkg['src'])
+        cmd.append('-DCMAKE_INSTALL_PREFIX=%s' % self._inst_dir)
+        cmd.append('-GNinja')
+        if cmakeopts:
+            cmd.extend(cmakeopts.split())
+
+        self._call(cmd, pkg['build'], self._env)
 
     def _build_autotools(self, pkg):
         self.logger.logln('Building %s with autotools.' % pkg['name'])
 
+        self._call_configure(pkg)
+        self._call_make(pkg)
+
     def _build_cmake(self, pkg):
         self.logger.logln('Building %s with cmake.' % pkg['name'])
+
+        self._call_cmake(pkg)
+        self._call_ninja(pkg)
 
     def clean(self):
         print('Clean')
@@ -316,14 +384,15 @@ class Builder:
     def _clean_pkg(self, pkg):
         self.logger.logln('Cleaning package: ' + pkg)
 
-    def _call(self, cmd):
+    def _call(self, cmd, cwd=None, env=None):
         if type(cmd) != type([]) or len(cmd) == 0:
             raise Exception('Invalid command to _call', cmd)
 
         self.logger.logln(' '.join(cmd))
-        cmd = subprocess.Popen(cmd, stdout=self.logger.get_file(),
-                stderr=subprocess.STDOUT, universal_newlines=True)
-        result = cmd.wait()
+        cmdprocess = subprocess.Popen(cmd, stdout=self.logger.get_file(),
+                stderr=subprocess.STDOUT, universal_newlines=True,
+                cwd=cwd, env=env)
+        result = cmdprocess.wait()
 
         if result != 0:
             raise Exception('Command failed', cmd, result)
