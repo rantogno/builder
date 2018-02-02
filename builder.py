@@ -267,6 +267,9 @@ class Builder:
             self.logger.logln('Skipping install of "%s"' % pkg['name'])
             return
 
+        if pkg['state'].get('built'):
+            return
+
         pkgname = pkg['name']
         srcdir = pkg['src']
         builddir = pkg['build']
