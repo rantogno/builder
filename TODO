@@ -13,3 +13,20 @@
       fetch, and inform about them at the end
  - add env vars to setup source and install dirs.
  - install a setup_env.sh file.
+
+== Python version
+
+   - output env_mesa.sh
+   - Add missing packages
+   - add option for buildtype
+
+   - skip configure step if possible
+   - force build
+   - force configure
+   - rebuild if builddir has been removed
+      - potentially reconfigure too
+      - for autotools, potentially call autogen.sh too
+
+   - add specific commands (configure, build, install, uninstall)
+
+   - specialize Pkg class (Pkg meson, autotools, cmake)
