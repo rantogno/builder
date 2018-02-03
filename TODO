@@ -16,10 +16,10 @@
 
 == Python version
 
-   - output env_mesa.sh
    - Add missing packages
    - add option for buildtype
 
+   - check if WLD is already set before starting
    - skip configure step if possible
    - force build
    - force configure

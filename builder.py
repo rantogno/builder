@@ -316,6 +316,8 @@ class Pkg:
 
 class Builder:
 
+    ENV_NAME = 'setup_env.sh'
+
     def __init__(self, args):
         self.__args = args
 
@@ -409,6 +411,33 @@ class Builder:
 
         self._env = env
 
+    def _write_env_file(self):
+        envpath = os.path.join(self._inst_dir, self.ENV_NAME)
+
+        content = '#!/usr/bin/env bash\n\n'
+        content += 'export WLD=%s\n' % self._inst_dir
+        content += 'export LD_LIBRARY_PATH="$WLD/lib:$WLD/lib64"\n'
+
+        content += 'export PKG_CONFIG_PATH="'
+        content += '$WLD/lib/pkgconfig:'
+        content += '$WLD/lib64/pkgconfig:'
+        content += '$WLD/share/pkgconfig"\n'
+
+        content += 'export PATH="$WLD/bin:$PATH"\n'
+        content += 'export ACLOCAL_PATH="$WLD/share/aclocal"\n'
+        content += 'export ACLOCAL="aclocal -I $ACLOCAL_PATH"\n'
+
+        content += 'export CMAKE_PREFIX_PATH=$WLD\n'
+
+        content += 'export VK_ICD_FILENAMES='
+        content += '"$WLD/share/vulkan/icd.d/intel_icd.x86_64.json"\n'
+
+        content += 'export PIGLIT_PLATFORM=gbm\n'
+
+        envfile = open(envpath, 'w')
+        envfile.write(content)
+        envfile.close()
+
     def _make_dirs(self):
         self.logger.logln('Creating src, build and install dirs.')
         os.makedirs(self._src_dir, exist_ok=True)
@@ -432,6 +461,8 @@ class Builder:
 
         for p in self._pkgs:
             self._process_pkg(p, self._inst_pkg)
+
+        self._write_env_file()
 
     def _inst_pkg(self, pkg):
         pkg.install()
