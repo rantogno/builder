@@ -16,7 +16,13 @@
 
 == Python version
 
-   - add option for buildtype
+   - builder.py init -- configure repository/build dir
+   - if build failed, print last 5-10 lines from log
+   - make list of packages a json file
+      - install json into ~/.config/builder.json
+      - allow to initialize build dir with a specific json
+
+   - add build_in_tree option
 
    - check if WLD is already set before starting
    - skip configure step if possible
@@ -33,8 +39,3 @@
    - fetch while build
       - make fetch packages in parallel, and keep building while things still
       fetch
-   - builder.py init -- configure repository/build dir
-   - if build failed, print last 5-10 lines from log
-   - make list of packages a json file
-      - install json into ~/.config/builder.json
-      - allow to initialize build dir with a specific json
