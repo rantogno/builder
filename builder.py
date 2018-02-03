@@ -326,6 +326,8 @@ class Builder:
         self.process_options(args)
         self.logger = Logger(self.__logfile, self.__verbose)
 
+        os.makedirs(self._work_dir, exist_ok=True)
+
     def process_options(self, args):
         self.__verbose = args.verbose
 
@@ -409,7 +411,6 @@ class Builder:
 
     def _make_dirs(self):
         self.logger.logln('Creating src, build and install dirs.')
-        os.makedirs(self._work_dir, exist_ok=True)
         os.makedirs(self._src_dir, exist_ok=True)
         os.makedirs(self._build_dir, exist_ok=True)
         os.makedirs(self._inst_dir, exist_ok=True)
