@@ -16,7 +16,6 @@
 
 == Python version
 
-   - Add missing packages
    - add option for buildtype
 
    - check if WLD is already set before starting
@@ -27,6 +26,15 @@
       - potentially reconfigure too
       - for autotools, potentially call autogen.sh too
 
-   - add specific commands (configure, build, install, uninstall)
+   - add specific commands (autogen, configure, build, install, uninstall)
+   - if called explicitly, do not skip
 
    - specialize Pkg class (Pkg meson, autotools, cmake)
+   - fetch while build
+      - make fetch packages in parallel, and keep building while things still
+      fetch
+   - builder.py init -- configure repository/build dir
+   - if build failed, print last 5-10 lines from log
+   - make list of packages a json file
+      - install json into ~/.config/builder.json
+      - allow to initialize build dir with a specific json
