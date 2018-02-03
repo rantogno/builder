@@ -178,6 +178,7 @@ class Pkg:
 
         self._configured = False
         self._built = False
+        self._buildtype = pkgconf.get('buildtype')
 
         self.update()
 
@@ -197,6 +198,7 @@ class Pkg:
         self._configured = pkg['state']['configured']
         self._built = pkg['state']['built']
         self._skipinstall = pkg['skipinstall']
+        self._buildtype = pkg.get('buildtype')
 
     def get_conf(self, conftype):
         return self._config.get(conftype)
@@ -213,6 +215,7 @@ class Pkg:
                 'built': self._built,
             },
             'skipinstall': self._skipinstall,
+            'buildtype': self._buildtype,
         }
 
         return json_dict
@@ -262,12 +265,20 @@ class Pkg:
             print(Gray('SKIP'))
             return
 
-        if os.path.exists(os.path.join(self.srcpath, 'meson.build')):
-            self._build_meson()
+        build_func = {
+            'meson': self._build_meson,
+            'autotools': self._build_autotools,
+            'cmake': self._build_cmake,
+        }
+
+        if self._buildtype is not None:
+            build_func[self._buildtype]()
+        elif os.path.exists(os.path.join(self.srcpath, 'meson.build')):
+            build_func['meson']()
         elif os.path.exists(os.path.join(self.srcpath, 'autogen.sh')):
-            self._build_autotools()
+            build_func['autotools']()
         elif os.path.exists(os.path.join(self.srcpath, 'CMakeLists.txt')):
-            self._build_cmake()
+            build_func['cmake']()
 
         self._built = True
         self.update()
@@ -457,7 +468,7 @@ class Builder:
         path = os.path.join(usr, 'bin')
         env['PATH'] = ':'.join((path, env['PATH']))
 
-        aclocalpath = os.path.join(usr, 'share/local')
+        aclocalpath = os.path.join(usr, 'share/aclocal')
         env['ACLOCAL_PATH'] = aclocalpath
         env['ACLOCAL'] = 'aclocal -I ' + aclocalpath
 
