@@ -29,6 +29,61 @@ PACKAGES = {
         'igt-gpu-tools': {
             'uri': 'git://anongit.freedesktop.org/drm/igt-gpu-tools',
             },
+        'crucible': {
+            'uri': 'git://anongit.freedesktop.org/mesa/crucible',
+            'skipinstall': True,
+            },
+
+        'libinput': {
+            'uri': 'git://anongit.freedesktop.org/wayland/libinput',
+            'meson': '-Dlibwacom=false -Ddocumentation=false -Ddebug-gui=false -Dtests=false',
+            },
+        'libepoxy': {
+            'uri': 'https://github.com/anholt/libepoxy.git',
+            },
+        'macros': {
+            'uri': 'git://git.freedesktop.org/git/xorg/util/macros',
+            },
+        'x11proto': {
+            'uri': 'git://git.freedesktop.org/git/xorg/proto/x11proto',
+            },
+        'libxtrans': {
+            'uri': 'git://git.freedesktop.org/git/xorg/lib/libxtrans',
+            },
+        'libX11': {
+            'uri': 'git://git.freedesktop.org/git/xorg/lib/libX11',
+            },
+        'libXext': {
+            'uri': "git://git.freedesktop.org/git/xorg/lib/libXext",
+            },
+        'dri2proto': {
+            'uri': "git://git.freedesktop.org/git/xorg/proto/dri2proto",
+            },
+        'glproto': {
+            'uri': "git://git.freedesktop.org/git/xorg/proto/glproto",
+            },
+        'libpciaccess': {
+            'uri': "git://git.freedesktop.org/git/xorg/lib/libpciaccess",
+            },
+        'pixman': {
+            'uri': "git://git.freedesktop.org/git/pixman",
+            },
+        'xkeyboard_config': {
+            'uri': "git://anongit.freedesktop.org/xkeyboard-config",
+            },
+        'xkbcomp': {
+            'uri': "git://anongit.freedesktop.org/xorg/app/xkbcomp",
+            },
+        'xserver': {
+            'uri': "git://git.freedesktop.org/git/xorg/xserver",
+            },
+        'xinit': {
+            'uri': "git://anongit.freedesktop.org/xorg/app/xinit",
+            },
+        'weston': {
+            'uri': "git://anongit.freedesktop.org/wayland/weston",
+            'autotools': '--disable-setuid-install --enable-clients --enable-demo-clients-install',
+            },
 }
 
 import argparse, os
