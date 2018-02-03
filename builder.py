@@ -446,7 +446,7 @@ class Builder:
             self._process_pkg(p, self._clean_pkg)
 
     def _clean_pkg(self, pkg):
-        self.logger.logln('Cleaning package: ' + pkg['name'])
+        self.logger.logln('Cleaning package: ' + str(pkg))
         pkg.clean()
 
 def main():
