@@ -192,7 +192,7 @@ class Pkg:
         if os.path.exists(self.srcpath) and os.path.isdir(self.srcpath):
             print(Gray('SKIP'))
             return
-        cmd = ['git', 'clone', PACKAGES[pkgname]['uri'], self.srcpath]
+        cmd = ['git', 'clone', PACKAGES[self.name]['uri'], self.srcpath]
         self._call(cmd)
         print(Green('DONE'))
 
