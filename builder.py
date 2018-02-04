@@ -387,7 +387,7 @@ class Builder:
     def __init__(self, args):
         self.__args = args
 
-        if args.subparser == 'init':
+        if args.subparser in ('init',):
             self._setup_base(args.path)
         else:
             path = self._get_default()
@@ -588,6 +588,12 @@ def main():
     init_p.add_argument('path', type=str, nargs='?',
             help='path to initialize builder')
 
+    # Use this directory
+    use_p = commands.add_parser('use',
+            help='use this build environment')
+    use_p.add_argument('use', type=str, nargs='?',
+            help='path to start using')
+
     # Install packages
     install_p = commands.add_parser('install',
             parents=[pkg_parser],
@@ -599,6 +605,20 @@ def main():
             help='clean package source dir')
 
     args = parser.parse_args()
+
+    if args.subparser in ('use',):
+        usepath = args.use
+        if usepath is None:
+            usepath = os.path.curdir
+        usepath = os.path.abspath(usepath)
+        print('Setting path to use:', usepath)
+
+        default_base = '~/.config'
+        default_path = os.path.expanduser(default_base)
+        default = os.path.join(default_path, 'builder.conf')
+        os.makedirs(default_path, exist_ok=True)
+        open(default, 'w').write(usepath + '\n')
+        return
 
     if args.subparser is not None:
         builder = Builder(args)
