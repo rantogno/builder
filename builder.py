@@ -147,7 +147,7 @@ class Pkg:
         self._logger = logger
         self._env = env
 
-        confdir = os.path.join(basedir, '.workdir')
+        confdir = os.path.join(basedir, '.builder/pkgs')
         self.jsonpath = os.path.join(confdir, name + '.json')
         if os.path.exists(self.jsonpath):
             self._load_from(self.jsonpath)
@@ -387,14 +387,27 @@ class Builder:
     def __init__(self, args):
         self.__args = args
 
+        if args.subparser == 'init':
+            self._setup_base(args.path)
+        else:
+            self._setup_base(os.path.curdir)
+            self._check_base_valid()
+
         self._setup_env()
 
-        self.__logfile = os.path.join(self._base_dir, 'builder.log')
-
         self.process_options(args)
-        self.logger = Logger(self.__logfile, self.__verbose)
 
-        os.makedirs(self._work_dir, exist_ok=True)
+    def _setup_base(self, path):
+        basedir = os.path.abspath(path)
+        self._base_dir = basedir
+        self._work_dir = os.path.join(basedir, '.builder')
+
+    def _check_base_valid(self):
+        if not os.path.exists(self._work_dir):
+            raise Exception("'.buildder' directory doesn't exist under "
+                    "current directory: '%s'" % self._base_dir)
+        if not os.path.isdir(self._work_dir):
+            raise Exception("%s is not a dir" % self._work_dir)
 
     def process_options(self, args):
         self.__verbose = args.verbose
@@ -403,6 +416,9 @@ class Builder:
             self.__logfile = args.output
 
         self.__command = args.subparser
+
+        if args.subparser in ('init',):
+            return
         self.process_packages(args.packages)
 
     def process_packages(self, packages):
@@ -425,7 +441,12 @@ class Builder:
             raise Exception('Invalid packages: ' + str(invalid))
 
     def run(self):
+        if self.__command != 'init':
+            # logger disabled when initializing repo
+            self._logfile = os.path.join(self._base_dir, 'builder.log')
+            self.logger = Logger(self._logfile, self.__verbose)
         operation = {
+                'init': self.initialize,
                 'install': self.install,
                 'clean': self.clean,
                 }
@@ -433,19 +454,7 @@ class Builder:
         operation[self.__command]()
 
     def _setup_env(self):
-        basedir = os.path.abspath(os.path.curdir)
-
-        devdir_file = os.path.join(basedir, '.builddir')
-
-        if not os.path.exists(devdir_file):
-            raise Exception("'.builddir' file doesn't exist under "
-                    "current directory: '%s'" % basedir)
-
-        if not os.path.isfile(devdir_file):
-            raise Exception("%s is not a file" % devdir_file)
-
-        self._base_dir = basedir
-        self._work_dir = os.path.join(basedir, 'src')
+        basedir = self._base_dir
         self._src_dir = os.path.join(basedir, 'src')
         self._build_dir = os.path.join(basedir, 'build')
         self._inst_dir = os.path.join(basedir, 'usr')
@@ -518,17 +527,22 @@ class Builder:
 
         operation(pkg)
 
+    def initialize(self):
+        os.makedirs(self._work_dir, exist_ok=True)
+        pkgspath = os.path.join(self._work_dir, 'pkgs')
+        os.makedirs(pkgspath, exist_ok=True)
+
     def install(self):
         print('Install')
 
         self._make_dirs()
 
+        self._write_env_file()
+
         self.logger.logln("Starting build.")
 
         for p in self._pkgs:
             self._process_pkg(p, self._inst_pkg)
-
-        self._write_env_file()
 
     def _inst_pkg(self, pkg):
         pkg.install()
@@ -556,6 +570,11 @@ def main():
             help='package to process')
 
     commands = parser.add_subparsers(help='commands to run', dest='subparser')
+
+    # Initialization
+    init_p = commands.add_parser('init',
+            help='initialize build environment')
+    init_p.add_argument('path', type=str, help='path to initialize builder')
 
     # Install packages
     install_p = commands.add_parser('install',
