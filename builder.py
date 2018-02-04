@@ -1,91 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-PACKAGES = {
-        'libunwind': {
-            'uri': 'git://git.sv.gnu.org/libunwind.git',
-            },
-        'libdrm': {
-            'uri': 'git://anongit.freedesktop.org/drm/libdrm',
-            },
-        'wayland': {
-            'uri': 'git://anongit.freedesktop.org/wayland/wayland',
-            'autotools': '--disable-documentation'
-            },
-        'wayland-protocols': {
-            'uri': 'git://anongit.freedesktop.org/wayland/wayland-protocols',
-            },
-        'mesa': {
-            'uri': 'git://anongit.freedesktop.org/mesa/mesa',
-            'meson': '-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true'
-            },
-        'waffle': {
-            'uri': 'https://github.com/waffle-gl/waffle.git',
-            },
-        'piglit': {
-            'uri': 'git://anongit.freedesktop.org/piglit',
-            'skipinstall': True,
-            },
-        'igt-gpu-tools': {
-            'uri': 'git://anongit.freedesktop.org/drm/igt-gpu-tools',
-            },
-        'crucible': {
-            'uri': 'git://anongit.freedesktop.org/mesa/crucible',
-            'skipinstall': True,
-            },
-
-        'libinput': {
-            'uri': 'git://anongit.freedesktop.org/wayland/libinput',
-            'meson': '-Dlibwacom=false -Ddocumentation=false -Ddebug-gui=false -Dtests=false',
-            },
-        'libepoxy': {
-            'uri': 'https://github.com/anholt/libepoxy.git',
-            },
-        'macros': {
-            'uri': 'git://git.freedesktop.org/git/xorg/util/macros',
-            },
-        'x11proto': {
-            'uri': 'git://git.freedesktop.org/git/xorg/proto/x11proto',
-            },
-        'libxtrans': {
-            'uri': 'git://git.freedesktop.org/git/xorg/lib/libxtrans',
-            },
-        'libX11': {
-            'uri': 'git://git.freedesktop.org/git/xorg/lib/libX11',
-            },
-        'libXext': {
-            'uri': "git://git.freedesktop.org/git/xorg/lib/libXext",
-            },
-        'dri2proto': {
-            'uri': "git://git.freedesktop.org/git/xorg/proto/dri2proto",
-            },
-        'glproto': {
-            'uri': "git://git.freedesktop.org/git/xorg/proto/glproto",
-            },
-        'libpciaccess': {
-            'uri': "git://git.freedesktop.org/git/xorg/lib/libpciaccess",
-            },
-        'pixman': {
-            'uri': "git://git.freedesktop.org/git/pixman",
-            },
-        'xkeyboard_config': {
-            'uri': "git://anongit.freedesktop.org/xkeyboard-config",
-            },
-        'xkbcomp': {
-            'uri': "git://anongit.freedesktop.org/xorg/app/xkbcomp",
-            },
-        'xserver': {
-            'uri': "git://git.freedesktop.org/git/xorg/xserver",
-            },
-        'xinit': {
-            'uri': "git://anongit.freedesktop.org/xorg/app/xinit",
-            },
-        'weston': {
-            'uri': "git://anongit.freedesktop.org/wayland/weston",
-            'autotools': '--disable-setuid-install --enable-clients --enable-demo-clients-install',
-            },
-}
-
 import argparse, os
 import os.path
 import subprocess
@@ -142,10 +57,11 @@ class Logger:
         return self._logfile
 
 class Pkg:
-    def __init__(self, name, basedir, logger, env):
+    def __init__(self, pkglist, name, basedir, logger, env):
         self.name = name
         self._logger = logger
         self._env = env
+        self._pkglist = pkglist
 
         confdir = os.path.join(basedir, '.builder/pkgs')
         self.jsonpath = os.path.join(confdir, name + '.json')
@@ -166,7 +82,7 @@ class Pkg:
         self.srcpath = os.path.join(srcdir, self.name)
         self.buildpath = os.path.join(builddir, self.name)
 
-        pkgconf = PACKAGES[self.name]
+        pkgconf = self._pkglist[self.name]
 
         self._skipinstall = pkgconf.get('skipinstall', False)
 
@@ -250,7 +166,7 @@ class Pkg:
         if os.path.exists(self.srcpath) and os.path.isdir(self.srcpath):
             print(Gray('SKIP'))
             return
-        cmd = ['git', 'clone', PACKAGES[self.name]['uri'], self.srcpath]
+        cmd = ['git', 'clone', self._pkglist[self.name]['uri'], self.srcpath]
         self._call(cmd)
         print(Green('DONE'))
 
@@ -420,6 +336,14 @@ class Builder:
 
         return None
 
+    def _load_pkg_list(self, path=None):
+        if path is None:
+            path = os.path.curdir
+
+        path = os.path.abspath(path)
+        pkgfile = open(path)
+        self._pkglist = json.load(pkgfile)
+
     def process_options(self, args):
         self.__verbose = args.verbose
 
@@ -430,13 +354,15 @@ class Builder:
 
         if args.subparser in ('init',):
             return
+
+        self._load_pkg_list(os.path.join(self._work_dir, 'pkglist.json'))
         self.process_packages(args.packages)
 
     def process_packages(self, packages):
         self.check_packages(packages)
 
         if len(packages) == 0:
-            packages = PACKAGES.keys()
+            packages = self._pkglist.keys()
 
         self._pkgs = list(packages)
 
@@ -445,7 +371,7 @@ class Builder:
     def check_packages(self, packages):
         invalid = []
         for pkg in packages:
-            if pkg not in PACKAGES:
+            if pkg not in self._pkglist:
                 invalid.append(pkg)
 
         if len(invalid) > 0:
@@ -534,7 +460,8 @@ class Builder:
     def _process_pkg(self, pkgname, operation):
         self.logger.logln('')
 
-        pkg = Pkg(pkgname, self._base_dir, self.logger, self._env)
+        pkg = Pkg(self._pkglist, pkgname,
+                self._base_dir, self.logger, self._env)
 
         operation(pkg)
 
