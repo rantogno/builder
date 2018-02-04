@@ -3,6 +3,7 @@
 
 import argparse, os
 import os.path
+import shutil
 import subprocess
 import json
 
@@ -470,6 +471,9 @@ class Builder:
         pkgspath = os.path.join(self._work_dir, 'pkgs')
         os.makedirs(pkgspath, exist_ok=True)
 
+        jsonfile = os.path.join(self._work_dir, 'pkglist.json')
+        shutil.copyfile(self.__args.jsonfile, jsonfile)
+
     def install(self):
         print('Install')
 
@@ -514,6 +518,8 @@ def main():
             help='initialize build environment')
     init_p.add_argument('path', type=str, nargs='?',
             help='path to initialize builder')
+    init_p.add_argument('--jsonfile', '-f', required=True,
+            help='json file used to initialize')
 
     # Use this directory
     use_p = commands.add_parser('use',
