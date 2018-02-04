@@ -397,7 +397,9 @@ class Builder:
 
         self.process_options(args)
 
-    def _setup_base(self, path):
+    def _setup_base(self, path=None):
+        if path is None:
+            path = os.path.curdir
         basedir = os.path.abspath(path)
         self._base_dir = basedir
         self._work_dir = os.path.join(basedir, '.builder')
@@ -574,7 +576,8 @@ def main():
     # Initialization
     init_p = commands.add_parser('init',
             help='initialize build environment')
-    init_p.add_argument('path', type=str, help='path to initialize builder')
+    init_p.add_argument('path', type=str, nargs='?',
+            help='path to initialize builder')
 
     # Install packages
     install_p = commands.add_parser('install',
