@@ -390,7 +390,8 @@ class Builder:
         if args.subparser == 'init':
             self._setup_base(args.path)
         else:
-            self._setup_base(os.path.curdir)
+            path = self._get_default()
+            self._setup_base(path)
             self._check_base_valid()
 
         self._setup_env()
@@ -410,6 +411,14 @@ class Builder:
                     "current directory: '%s'" % self._base_dir)
         if not os.path.isdir(self._work_dir):
             raise Exception("%s is not a dir" % self._work_dir)
+
+    def _get_default(self):
+        default = '~/.config/builder.conf'
+        default_path = os.path.expanduser(default)
+        if os.path.isfile(default_path):
+            return open(default_path).read().strip()
+
+        return None
 
     def process_options(self, args):
         self.__verbose = args.verbose
