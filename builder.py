@@ -170,9 +170,10 @@ class Pkg:
 
         print('Building %s: ' % self.name, end='')
 
-        if self._built:
-            print(Gray('SKIP'))
-            return
+        if os.path.exists(self.buildpath) and os.path.isdir(self.buildpath):
+            if self._built:
+                print(Gray('SKIP'))
+                return
 
         build_func = {
             'meson': self._build_meson,
