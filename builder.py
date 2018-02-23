@@ -171,7 +171,7 @@ class Pkg:
         print('Building %s: ' % self.name, end='')
 
         if os.path.exists(self.buildpath) and os.path.isdir(self.buildpath):
-            if self._built:
+            if self._built and not self._force_build:
                 print(Gray('SKIP'))
                 return
 
@@ -277,9 +277,12 @@ class Pkg:
         self._configured = True
         self.update()
 
-    def install(self):
+    def install(self, build=False, configure=False):
         self._logger.logln('')
         self._logger.logln('Installing package: ' + self.name)
+
+        self._force_build = build
+        self._force_configure = configure
 
         self._fetch()
         self._build()
@@ -480,7 +483,9 @@ class Builder:
             self._process_pkg(p, self._inst_pkg)
 
     def _inst_pkg(self, pkg):
-        pkg.install()
+        force_build = self.__args.build
+        force_configure = self.__args.configure
+        pkg.install(build=force_build, configure=force_configure)
         return
 
     def clean(self):
@@ -524,6 +529,12 @@ def main():
     install_p = commands.add_parser('install',
             parents=[pkg_parser],
             help='build and install packages')
+
+    install_p.add_argument('--build', '-b', action='store_true',
+            help='force rebuild package if already built')
+
+    install_p.add_argument('--configure', '-c', action='store_true',
+            help='force reconfigure package if already configured')
 
     # Clean packages
     clean_p = commands.add_parser('clean',
