@@ -73,18 +73,7 @@ class Pkg:
 
         self._inst_dir = os.path.join(basedir, 'usr')
 
-    def _create_new(self, basedir):
-        self._logger.logln('Creating new config for: %s' % self.name)
-
-        srcdir = os.path.join(basedir, 'src')
-        builddir = os.path.join(basedir, 'build')
-        workdir = os.path.join(basedir, '.workdir')
-
-        self.srcpath = os.path.join(srcdir, self.name)
-        self.buildpath = os.path.join(builddir, self.name)
-
         pkgconf = self._pkglist[self.name]
-
         self._skipinstall = pkgconf.get('skipinstall', False)
 
         self._config = {
@@ -93,9 +82,22 @@ class Pkg:
             'cmake': pkgconf.get('cmake'),
         }
 
+        self._buildtype = pkgconf.get('buildtype')
+
+        srcdir = os.path.join(basedir, 'src')
+        builddir = os.path.join(basedir, 'build')
+        workdir = os.path.join(basedir, '.workdir')
+
+        self.srcpath = os.path.join(srcdir, self.name)
+        self.buildpath = os.path.join(builddir, self.name)
+
+    def _create_new(self, basedir):
+        self._logger.logln('Creating new config for: %s' % self.name)
+
+        pkgconf = self._pkglist[self.name]
+
         self._configured = False
         self._built = False
-        self._buildtype = pkgconf.get('buildtype')
 
         self.update()
 
@@ -109,13 +111,8 @@ class Pkg:
         if not '__builder__' in pkg:
             raise Exception('%s is not a "Pkg" config file' % jsonpath)
 
-        self.srcpath = pkg['srcpath']
-        self.buildpath = pkg['buildpath']
-        self._config = pkg['config']
         self._configured = pkg['state']['configured']
         self._built = pkg['state']['built']
-        self._skipinstall = pkg['skipinstall']
-        self._buildtype = pkg.get('buildtype')
 
     def get_conf(self, conftype):
         return self._config.get(conftype)
@@ -124,15 +121,10 @@ class Pkg:
         json_dict = {
             '__builder__': True,
             'name': self.name,
-            'srcpath': self.srcpath,
-            'buildpath': self.buildpath,
-            'config': self._config,
             'state': {
                 'configured': self._configured,
                 'built': self._built,
             },
-            'skipinstall': self._skipinstall,
-            'buildtype': self._buildtype,
         }
 
         return json_dict
