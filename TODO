@@ -16,24 +16,14 @@
 
 == Python version
 
-   - builder.py init -- configure repository/build dir
-   - if build failed, print last 5-10 lines from log
-   - make list of packages a json file
-      - install json into ~/.config/builder.json
-      - allow to initialize build dir with a specific json
+   - use: add option to print current used project
+   - use: add option to list available setups
+   - add "status" command, to show current status of each package.
 
+   - if build failed, print last 5-10 lines from log
    - add build_in_tree option
 
    - check if WLD is already set before starting
-   - skip configure step if possible
-   - force build
-   - force configure
-   - rebuild if builddir has been removed
-      - potentially reconfigure too
-      - for autotools, potentially call autogen.sh too
-
-   - add specific commands (autogen, configure, build, install, uninstall)
-   - if called explicitly, do not skip
 
    - specialize Pkg class (Pkg meson, autotools, cmake)
    - fetch while build
