@@ -163,17 +163,25 @@ class Pkg:
         self._call(cmd)
         print(Green('DONE'))
 
+    def _check_configured(self):
+        if os.path.exists(self.buildpath) and os.path.isdir(self.buildpath):
+            if self._configured and not self._force_configure:
+                return True
+        return False
+
+    def _check_built(self):
+        if os.path.exists(self.buildpath) and os.path.isdir(self.buildpath):
+            if self._built and not self._force_build:
+                # print(Gray('SKIP'))
+                return True
+        return False
+
     def _build(self):
         if self._skipinstall:
             self._logger.logln('Skipping install of "%s"' % self.name)
             return
 
         print('Building %s: ' % self.name, end='')
-
-        if os.path.exists(self.buildpath) and os.path.isdir(self.buildpath):
-            if self._built and not self._force_build:
-                print(Gray('SKIP'))
-                return
 
         build_func = {
             'meson': self._build_meson,
@@ -190,7 +198,6 @@ class Pkg:
         elif os.path.exists(os.path.join(self.srcpath, 'CMakeLists.txt')):
             build_func['cmake']()
 
-        self._built = True
         self.update()
 
         print(Green('DONE'))
@@ -214,6 +221,8 @@ class Pkg:
         self._call_ninja()
 
     def _call_meson(self):
+        if self._check_configured():
+            return
         mesonopts = self.get_conf('meson')
         self._logger.logln('Build opts: "%s"' % mesonopts)
 
@@ -226,16 +235,23 @@ class Pkg:
         self._call(cmd, self.srcpath)
 
         self._configured = True
+        self._built = False
         self.update()
 
     def _call_ninja(self):
+        if self._check_built():
+            return
         cmd = ['ninja']
         self._call(cmd, self.buildpath)
 
         cmd.append('install')
         self._call(cmd, self.buildpath)
+        self._built = True
+        self.update()
 
     def _call_configure(self):
+        if self._check_configured():
+            return
         autoopts = self.get_conf('autotools')
         self._logger.logln('Build opts: "%s"' % autoopts)
 
@@ -250,17 +266,24 @@ class Pkg:
         self._call(cmd, self.buildpath)
 
         self._configured = True
+        self._built = False
         self.update()
 
     def _call_make(self):
+        if self._check_built():
+            return
         cmd = ['make']
         cmd.append('-j%d' % os.cpu_count())
         self._call(cmd, self.buildpath)
 
         cmd.append('install')
         self._call(cmd, self.buildpath)
+        self._built = True
+        self.update()
 
     def _call_cmake(self):
+        if self._check_configured():
+            return
         cmakeopts = self.get_conf('cmake')
         self._logger.logln('Build opts: "%s"' % cmakeopts)
 
@@ -275,6 +298,7 @@ class Pkg:
         self._call(cmd, self.buildpath)
 
         self._configured = True
+        self._built = False
         self.update()
 
     def install(self, build=False, configure=False):
