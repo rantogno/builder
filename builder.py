@@ -91,10 +91,10 @@ class Pkg:
         self.srcpath = os.path.join(srcdir, self.name)
         self.buildpath = os.path.join(builddir, self.name)
 
+        self._skipped = True
+
     def _create_new(self, basedir):
         self._logger.logln('Creating new config for: %s' % self.name)
-
-        pkgconf = self._pkglist[self.name]
 
         self._configured = False
         self._built = False
@@ -133,6 +133,17 @@ class Pkg:
         jsonfile = open(self.jsonpath, 'w')
         json.dump(self, jsonfile, indent=4, default=Pkg._to_json)
         jsonfile.close()
+
+    @property
+    def built(self):
+        return self._built
+
+    @built.setter
+    def built(self, val):
+        self._built = val
+        self.update()
+        if val:
+            self._skipped = False
 
     def __str__(self):
         return self.name
@@ -198,9 +209,10 @@ class Pkg:
         elif os.path.exists(os.path.join(self.srcpath, 'CMakeLists.txt')):
             build_func['cmake']()
 
-        self.update()
-
-        print(Green('DONE'))
+        if self._skipped:
+            print(Gray('SKIP'))
+        else:
+            print(Green('DONE'))
 
     def _build_meson(self):
         self._logger.logln('Building %s with meson.' % self.name)
@@ -235,8 +247,7 @@ class Pkg:
         self._call(cmd, self.srcpath)
 
         self._configured = True
-        self._built = False
-        self.update()
+        self.built = False
 
     def _call_ninja(self):
         if self._check_built():
@@ -246,8 +257,7 @@ class Pkg:
 
         cmd.append('install')
         self._call(cmd, self.buildpath)
-        self._built = True
-        self.update()
+        self.built = True
 
     def _call_configure(self):
         if self._check_configured():
@@ -266,8 +276,7 @@ class Pkg:
         self._call(cmd, self.buildpath)
 
         self._configured = True
-        self._built = False
-        self.update()
+        self.built = False
 
     def _call_make(self):
         if self._check_built():
@@ -278,8 +287,7 @@ class Pkg:
 
         cmd.append('install')
         self._call(cmd, self.buildpath)
-        self._built = True
-        self.update()
+        self.built = True
 
     def _call_cmake(self):
         if self._check_configured():
@@ -298,8 +306,7 @@ class Pkg:
         self._call(cmd, self.buildpath)
 
         self._configured = True
-        self._built = False
-        self.update()
+        self.built = False
 
     def install(self, build=False, configure=False):
         self._logger.logln('')
