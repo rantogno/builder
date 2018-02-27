@@ -70,6 +70,9 @@
     "xkbcomp": {
         "uri": "git://anongit.freedesktop.org/xorg/app/xkbcomp"
     },
+    "xorgproto": {
+        "uri": "git://anongit.freedesktop.org/xorg/proto/xorgproto"
+    },
     "xserver": {
         "uri": "git://git.freedesktop.org/git/xorg/xserver"
     },
