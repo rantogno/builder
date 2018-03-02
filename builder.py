@@ -7,6 +7,8 @@ import shutil
 import subprocess
 import json
 
+PKG_CMDS = ('install', 'clean')
+
 class Color:
     def __init__(self, msg, color):
         self.msg = msg
@@ -331,7 +333,7 @@ class Builder:
     def __init__(self, args):
         self.__args = args
 
-        if args.subparser in ('init',):
+        if args.subparser not in PKG_CMDS:
             self._setup_base(args.path)
         else:
             path = self._get_default()
@@ -380,7 +382,7 @@ class Builder:
 
         self.__command = args.subparser
 
-        if args.subparser in ('init',):
+        if args.subparser not in PKG_CMDS:
             return
 
         self._load_pkg_list(os.path.join(self._work_dir, 'pkglist.json'))
@@ -414,6 +416,7 @@ class Builder:
                 'init': self.initialize,
                 'install': self.install,
                 'clean': self.clean,
+                'use': self.use,
                 }
 
         operation[self.__command]()
@@ -527,6 +530,23 @@ class Builder:
         for p in self._pkgs:
             self._process_pkg(p, self._clean_pkg)
 
+    def use(self):
+        print('Use')
+        usepath = self.__args.path
+
+        if usepath is None:
+            usepath = os.path.curdir
+
+        usepath = os.path.abspath(usepath)
+        print('Setting path to use:', usepath)
+        self._check_base_valid()
+
+        default_base = '~/.config'
+        default_path = os.path.expanduser(default_base)
+        default = os.path.join(default_path, 'builder.conf')
+        os.makedirs(default_path, exist_ok=True)
+        open(default, 'w').write(usepath + '\n')
+
     def _clean_pkg(self, pkg):
         self.logger.logln('Cleaning package: ' + str(pkg))
         pkg.clean()
@@ -553,7 +573,7 @@ def main():
     # Use this directory
     use_p = commands.add_parser('use',
             help='use this build environment')
-    use_p.add_argument('use', type=str, nargs='?',
+    use_p.add_argument('path', type=str, nargs='?',
             help='path to start using')
 
     # Install packages
@@ -573,20 +593,6 @@ def main():
             help='clean package source dir')
 
     args = parser.parse_args()
-
-    if args.subparser in ('use',):
-        usepath = args.use
-        if usepath is None:
-            usepath = os.path.curdir
-        usepath = os.path.abspath(usepath)
-        print('Setting path to use:', usepath)
-
-        default_base = '~/.config'
-        default_path = os.path.expanduser(default_base)
-        default = os.path.join(default_path, 'builder.conf')
-        os.makedirs(default_path, exist_ok=True)
-        open(default, 'w').write(usepath + '\n')
-        return
 
     if args.subparser is not None:
         builder = Builder(args)
