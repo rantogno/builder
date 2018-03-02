@@ -333,14 +333,11 @@ class Builder:
     def __init__(self, args):
         self.__args = args
 
-        if args.subparser not in PKG_CMDS:
-            self._setup_base(args.path)
-        else:
+        if args.subparser in PKG_CMDS:
             path = self._get_default()
             self._setup_base(path)
             self._check_base_valid()
-
-        self._setup_env()
+            self._setup_env()
 
         self.process_options(args)
 
@@ -408,7 +405,7 @@ class Builder:
             raise Exception('Invalid packages: ' + str(invalid))
 
     def run(self):
-        if self.__command != 'init':
+        if self.__command in PKG_CMDS:
             # logger disabled when initializing repo
             self._logfile = os.path.join(self._base_dir, 'builder.log')
             self.logger = Logger(self._logfile, self.__verbose)
@@ -497,6 +494,7 @@ class Builder:
         operation(pkg)
 
     def initialize(self):
+        self._setup_base(self.__args.path)
         os.makedirs(self._work_dir, exist_ok=True)
         pkgspath = os.path.join(self._work_dir, 'pkgs')
         os.makedirs(pkgspath, exist_ok=True)
@@ -539,6 +537,7 @@ class Builder:
 
         usepath = os.path.abspath(usepath)
         print('Setting path to use:', usepath)
+        self._setup_base(usepath)
         self._check_base_valid()
 
         default_base = '~/.config'
