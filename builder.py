@@ -92,10 +92,14 @@ class RepoConfig:
         print('Listing repos')
         repos = self._config['repos']
         for repo in repos:
-            print('%15s : [%s]' % (repo, repos[repo]['path']))
+            print('%15s : %s' % (repo, repos[repo]['path']))
 
         print()
-        print('Repo in use:', self._config['use'])
+        default_repo = self._config['use']
+        default_path = None
+        if default_repo is not None:
+            default_path = self.get_path(default_repo)
+        print('Repo in use: %s (%s)' % (default_repo, default_path))
 
     def add(self, name, path):
         repos = self._config['repos']
