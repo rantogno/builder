@@ -374,9 +374,9 @@ class Builder:
 
     ENV_NAME = 'setup_env.sh'
 
-    def __init__(self, args):
+    def __init__(self, args, repos):
         self.__args = args
-        self._repos = RepoConfig()
+        self._repos = repos
 
         if args.subparser in PKG_CMDS:
             self._repos.get_path(self._repos.use)
@@ -628,12 +628,14 @@ def main():
 
     args = parser.parse_args()
 
+    repos = RepoConfig()
+
     if args.subparser is None:
-        repos = RepoConfig()
         repos.list()
-    else:
-        builder = Builder(args)
-        builder.run()
+        return
+
+    builder = Builder(args, repos)
+    builder.run()
 
 if __name__ == '__main__':
     main()
