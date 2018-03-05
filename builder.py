@@ -78,6 +78,8 @@ class RepoConfig:
 
     @use.setter
     def use(self, val):
+        if not self.exist(val):
+            raise Exception('Invalid repo: ' + val)
         self._config['use'] = val
         self._update()
 
@@ -94,6 +96,12 @@ class RepoConfig:
 
         print()
         print('Repo in use:', self._config['use'])
+
+    def exist(self, repo):
+        return repo in self._config['repos']
+
+    def get_path(self, repo):
+        return self._config['repos'][repo]['path']
 
 class Pkg:
     def __init__(self, pkglist, name, basedir, logger, env):
@@ -368,9 +376,10 @@ class Builder:
 
     def __init__(self, args):
         self.__args = args
+        self._repos = RepoConfig()
 
         if args.subparser in PKG_CMDS:
-            path = self._get_default()
+            self._repos.get_path(self._repos.use)
             self._setup_base(path)
             self._check_base_valid()
             self._setup_env()
@@ -390,14 +399,6 @@ class Builder:
                     "current directory: '%s'" % self._base_dir)
         if not os.path.isdir(self._work_dir):
             raise Exception("%s is not a dir" % self._work_dir)
-
-    def _get_default(self):
-        default = '~/.config/builder.conf'
-        default_path = os.path.expanduser(default)
-        if os.path.isfile(default_path):
-            return open(default_path).read().strip()
-
-        return None
 
     def _load_pkg_list(self, path=None):
         if path is None:
@@ -566,21 +567,19 @@ class Builder:
 
     def use(self):
         print('Use')
-        usepath = self.__args.path
+        repo = self.__args.repo
 
-        if usepath is None:
-            usepath = os.path.curdir
+        if not self._repos.exist(repo):
+            print("Repo '%s' doesn't exist." % repo)
+            return
 
-        usepath = os.path.abspath(usepath)
+        usepath = self._repos.get_path(repo)
+
         print('Setting path to use:', usepath)
         self._setup_base(usepath)
         self._check_base_valid()
 
-        default_base = '~/.config'
-        default_path = os.path.expanduser(default_base)
-        default = os.path.join(default_path, 'builder.conf')
-        os.makedirs(default_path, exist_ok=True)
-        open(default, 'w').write(usepath + '\n')
+        self._repos.use = repo
 
     def _clean_pkg(self, pkg):
         self.logger.logln('Cleaning package: ' + str(pkg))
@@ -608,8 +607,8 @@ def main():
     # Use this directory
     use_p = commands.add_parser('use',
             help='use this build environment')
-    use_p.add_argument('path', type=str, nargs='?',
-            help='path to start using')
+    use_p.add_argument('repo', type=str,
+            help='repo to start using')
 
     # Install packages
     install_p = commands.add_parser('install',
