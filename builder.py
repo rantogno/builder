@@ -379,7 +379,10 @@ class Builder:
         self._repos = repos
 
         if args.subparser in PKG_CMDS:
-            self._repos.get_path(self._repos.use)
+            reponame = args.repo
+            if reponame is None:
+                reponame = self._repos.use
+            self._repos.get_path(reponame)
             self._setup_base(path)
             self._check_base_valid()
             self._setup_env()
@@ -589,6 +592,7 @@ def main():
     parser = argparse.ArgumentParser(description='Builder for mesa')
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--output', '-o', help='log file')
+    parser.add_argument('--repo', '-r', help='repo to use')
 
     pkg_parser = argparse.ArgumentParser(add_help=False)
     pkg_parser.add_argument('packages', metavar='PKG', type=str, nargs='*',
@@ -633,6 +637,12 @@ def main():
     if args.subparser is None:
         repos.list()
         return
+
+    if repos.use is None:
+        if args.repo is None and args.subparser != 'use':
+            print('No default repo set, need to specify one.')
+            print('Use option --repo')
+            return
 
     builder = Builder(args, repos)
     builder.run()
