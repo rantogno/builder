@@ -78,7 +78,7 @@ class RepoConfig:
 
     @use.setter
     def use(self, val):
-        if not self.exist(val):
+        if val != None and not self.exist(val):
             raise Exception('Invalid repo: ' + val)
         self._config['use'] = val
         self._update()
@@ -115,7 +115,10 @@ class RepoConfig:
         if v is None:
             print("Repo '%s' not found" % name)
             return
-        self._update
+
+        if self.use == name:
+            self.use = None
+        self._update()
 
     def exist(self, repo):
         return repo in self._config['repos']
@@ -474,6 +477,7 @@ class Builder:
                 'install': self.install,
                 'clean': self.clean,
                 'use': self.use,
+                'remove': self.remove,
                 }
 
         operation[self.__command]()
@@ -569,6 +573,10 @@ class Builder:
         shutil.copyfile(self.__args.jsonfile, jsonfile)
         self._repos.add(repo_name, self._base_dir)
 
+    def remove(self):
+        repo_name = self.__args.repo_name
+        self._repos.remove(repo_name)
+
     def install(self):
         print('Install')
 
@@ -642,6 +650,12 @@ def main():
             help='use this build environment')
     use_p.add_argument('repo_name', type=str,
             help='repo to start using')
+
+    # Use this directory
+    use_p = commands.add_parser('remove',
+            help='use this build environment')
+    use_p.add_argument('repo_name', type=str,
+            help='repo to remove')
 
     # Install packages
     install_p = commands.add_parser('install',
