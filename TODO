@@ -16,9 +16,6 @@
 
 == Python version
 
-   - use: add option to print current used project
-   - use: add option to list available setups
-
    - improve "-v"
    - improve "clean" cmd:
       - remove build dir too
