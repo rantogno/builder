@@ -84,7 +84,7 @@ class RepoConfig:
         self._update()
 
     def _update(self):
-        os.makedirs(self._default_path, exist_ok=True)
+        os.makedirs(os.path.dirname(self._default_path), exist_ok=True)
         jsonfile = open(self._default_path, 'w')
         json.dump(self._config, jsonfile, indent=4)
 
@@ -382,7 +382,7 @@ class Builder:
             reponame = args.repo
             if reponame is None:
                 reponame = self._repos.use
-            self._repos.get_path(reponame)
+            path = self._repos.get_path(reponame)
             self._setup_base(path)
             self._check_base_valid()
             self._setup_env()
