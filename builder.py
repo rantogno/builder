@@ -59,6 +59,42 @@ class Logger:
     def get_file(self):
         return self._logfile
 
+class RepoConfig:
+    def __init__(self):
+        default = '~/.config/builder.conf'
+        self._default_path = os.path.expanduser(default)
+        try:
+            config_file = open(self._default_path)
+            self._config = json.load(config_file)
+        except IOError:
+            self._config = {
+                    'use': None,
+                    'repos': {},
+                }
+
+    @property
+    def use(self):
+        return self._config['use']
+
+    @use.setter
+    def use(self, val):
+        self._config['use'] = val
+        self._update()
+
+    def _update(self):
+        os.makedirs(self._default_path, exist_ok=True)
+        jsonfile = open(self._default_path, 'w')
+        json.dump(self._config, jsonfile, indent=4)
+
+    def list(self):
+        print('Listing repos')
+        repos = self._config['repos']
+        for repo in repos:
+            print('%15s : [%s]' % (repo, repos[repo]['path']))
+
+        print()
+        print('Repo in use:', self._config['use'])
+
 class Pkg:
     def __init__(self, pkglist, name, basedir, logger, env):
         self.name = name
@@ -593,11 +629,12 @@ def main():
 
     args = parser.parse_args()
 
-    if args.subparser is not None:
+    if args.subparser is None:
+        repos = RepoConfig()
+        repos.list()
+    else:
         builder = Builder(args)
         builder.run()
-    else:
-        parser.print_help()
 
 if __name__ == '__main__':
     main()
