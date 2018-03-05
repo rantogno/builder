@@ -567,7 +567,7 @@ class Builder:
 
     def use(self):
         print('Use')
-        repo = self.__args.repo
+        repo = self.__args.repo_name
 
         if not self._repos.exist(repo):
             print("Repo '%s' doesn't exist." % repo)
@@ -607,7 +607,7 @@ def main():
     # Use this directory
     use_p = commands.add_parser('use',
             help='use this build environment')
-    use_p.add_argument('repo', type=str,
+    use_p.add_argument('repo_name', type=str,
             help='repo to start using')
 
     # Install packages
