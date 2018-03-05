@@ -97,6 +97,22 @@ class RepoConfig:
         print()
         print('Repo in use:', self._config['use'])
 
+    def add(self, name, path):
+        repos = self._config['repos']
+        if name in repos:
+            raise Exception('Repo %s already exists.' % name)
+
+        repos[name] = { 'path': path }
+        self._update()
+
+    def remove(self, name):
+        repos = self._config['repos']
+        v = repos.pop(name, None)
+        if v is None:
+            print("Repo '%s' not found" % name)
+            return
+        self._update
+
     def exist(self, repo):
         return repo in self._config['repos']
 
@@ -534,6 +550,12 @@ class Builder:
         operation(pkg)
 
     def initialize(self):
+        repo_name = self.__args.name
+        if self._repos.exist(repo_name):
+            print("Repo '%s' already exists." % repo_name)
+            print("If not, try removing it first.")
+            return
+
         self._setup_base(self.__args.path)
         os.makedirs(self._work_dir, exist_ok=True)
         pkgspath = os.path.join(self._work_dir, 'pkgs')
@@ -541,6 +563,7 @@ class Builder:
 
         jsonfile = os.path.join(self._work_dir, 'pkglist.json')
         shutil.copyfile(self.__args.jsonfile, jsonfile)
+        self._repos.add(repo_name, self._base_dir)
 
     def install(self):
         print('Install')
@@ -603,6 +626,8 @@ def main():
     # Initialization
     init_p = commands.add_parser('init',
             help='initialize build environment')
+    init_p.add_argument('name', type=str,
+            help='name of this repo')
     init_p.add_argument('path', type=str, nargs='?',
             help='path to initialize builder')
     init_p.add_argument('--jsonfile', '-f', required=True,
@@ -639,7 +664,7 @@ def main():
         return
 
     if repos.use is None:
-        if args.repo is None and args.subparser != 'use':
+        if args.repo is None and args.subparser in PKG_CMDS:
             print('No default repo set, need to specify one.')
             print('Use option --repo')
             return
