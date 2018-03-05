@@ -16,7 +16,6 @@
 
 == Python version
 
-   - improve "-v"
    - improve "clean" cmd:
       - remove build dir too
 

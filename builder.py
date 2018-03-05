@@ -225,9 +225,11 @@ class Pkg:
             raise Exception('Invalid command to _call', cmd)
 
         self._logger.logln(' '.join(cmd))
-        cmdprocess = subprocess.Popen(cmd, stdout=self._logger.get_file(),
+        cmdprocess = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True,
                 cwd=cwd, env=env)
+        for line in cmdprocess.stdout:
+            self._logger.log(line)
         result = cmdprocess.wait()
 
         if result != 0:
