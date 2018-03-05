@@ -403,7 +403,7 @@ class Builder:
         self.__args = args
         self._repos = repos
 
-        if args.subparser in PKG_CMDS:
+        if args.subparser in PKG_CMDS or args.subparser == 'env':
             reponame = args.repo
             if reponame is None:
                 reponame = self._repos.use
@@ -480,6 +480,7 @@ class Builder:
                 'clean': self.clean,
                 'use': self.use,
                 'remove': self.remove,
+                'env': self.print_env,
                 }
 
         operation[self.__command]()
@@ -521,28 +522,36 @@ class Builder:
         envpath = os.path.join(self._inst_dir, self.ENV_NAME)
 
         content = '#!/usr/bin/env bash\n\n'
-        content += 'export WLD=%s\n' % self._inst_dir
-        content += 'export LD_LIBRARY_PATH="$WLD/lib:$WLD/lib64"\n'
-
-        content += 'export PKG_CONFIG_PATH="'
-        content += '$WLD/lib/pkgconfig:'
-        content += '$WLD/lib64/pkgconfig:'
-        content += '$WLD/share/pkgconfig"\n'
-
-        content += 'export PATH="$WLD/bin:$PATH"\n'
-        content += 'export ACLOCAL_PATH="$WLD/share/aclocal"\n'
-        content += 'export ACLOCAL="aclocal -I $ACLOCAL_PATH"\n'
-
-        content += 'export CMAKE_PREFIX_PATH=$WLD\n'
-
-        content += 'export VK_ICD_FILENAMES='
-        content += '"$WLD/share/vulkan/icd.d/intel_icd.x86_64.json"\n'
-
-        content += 'export PIGLIT_PLATFORM=gbm\n'
+        content += self._env_content()
 
         envfile = open(envpath, 'w')
         envfile.write(content)
         envfile.close()
+
+    def _print_env_eval(self):
+        print(self._env_content('; '))
+
+    def _env_content(self, endl='\n'):
+        content = 'export WLD=%s' % self._inst_dir + endl
+        content += 'export LD_LIBRARY_PATH="$WLD/lib:$WLD/lib64"' + endl
+
+        content += 'export PKG_CONFIG_PATH="'
+        content += '$WLD/lib/pkgconfig:'
+        content += '$WLD/lib64/pkgconfig:'
+        content += '$WLD/share/pkgconfig"' + endl
+
+        content += 'export PATH="$WLD/bin:$PATH"' + endl
+        content += 'export ACLOCAL_PATH="$WLD/share/aclocal"' + endl
+        content += 'export ACLOCAL="aclocal -I $ACLOCAL_PATH"' + endl
+
+        content += 'export CMAKE_PREFIX_PATH=$WLD' + endl
+
+        content += 'export VK_ICD_FILENAMES='
+        content += '"$WLD/share/vulkan/icd.d/intel_icd.x86_64.json"' + endl
+
+        content += 'export PIGLIT_PLATFORM=gbm' + endl
+
+        return content
 
     def _make_dirs(self):
         self.logger.logln('Creating src, build and install dirs.')
@@ -578,6 +587,9 @@ class Builder:
     def remove(self):
         repo_name = self.__args.repo_name
         self._repos.remove(repo_name)
+
+    def print_env(self):
+        self._print_env_eval()
 
     def install(self):
         print('Install')
@@ -658,6 +670,10 @@ def main():
             help='use this build environment')
     use_p.add_argument('repo_name', type=str,
             help='repo to remove')
+
+    # Print env
+    use_p = commands.add_parser('env',
+            help='output env setup')
 
     # Install packages
     install_p = commands.add_parser('install',
