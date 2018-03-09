@@ -40,9 +40,6 @@
     "macros": {
         "uri": "git://git.freedesktop.org/git/xorg/util/macros"
     },
-    "x11proto": {
-        "uri": "git://git.freedesktop.org/git/xorg/proto/x11proto"
-    },
     "libxtrans": {
         "uri": "git://git.freedesktop.org/git/xorg/lib/libxtrans"
     },
