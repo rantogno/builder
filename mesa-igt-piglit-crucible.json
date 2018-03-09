@@ -1,0 +1,34 @@
+{
+    "libunwind": {
+        "uri": "git://git.sv.gnu.org/libunwind.git"
+    },
+    "libdrm": {
+        "uri": "git://anongit.freedesktop.org/drm/libdrm"
+    },
+    "wayland": {
+        "uri": "git://anongit.freedesktop.org/wayland/wayland",
+        "autotools": "--disable-documentation"
+    },
+    "wayland-protocols": {
+        "uri": "git://anongit.freedesktop.org/wayland/wayland-protocols"
+    },
+    "mesa": {
+        "uri": "git://anongit.freedesktop.org/mesa/mesa",
+        "meson": "-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers= -Dgbm=true"
+    },
+    "waffle": {
+        "uri": "https://github.com/waffle-gl/waffle.git"
+    },
+    "piglit": {
+        "uri": "git://anongit.freedesktop.org/piglit",
+        "skipinstall": true
+    },
+    "igt-gpu-tools": {
+        "uri": "git://anongit.freedesktop.org/drm/igt-gpu-tools",
+        "buildtype": "autotools"
+    },
+    "crucible": {
+        "uri": "git://anongit.freedesktop.org/mesa/crucible",
+        "skipinstall": true
+    }
+}
