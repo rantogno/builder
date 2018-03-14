@@ -4,6 +4,7 @@
 import argparse, os
 import os.path
 import shutil
+import shutil
 import subprocess
 import json
 
@@ -394,6 +395,8 @@ class Pkg:
         self._logger.logln('Cleaning package: ' + self.name)
         cmd = ['git', 'clean', '-fdx']
         self._call(cmd, self.srcpath)
+        shutil.rmtree(self.buildpath)
+        os.remove(self.jsonpath)
 
 class Builder:
 
