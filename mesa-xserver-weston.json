@@ -12,6 +12,12 @@
     "wayland-protocols": {
         "uri": "git://anongit.freedesktop.org/wayland/wayland-protocols"
     },
+    "xcb-proto": {
+        "uri": "git://anongit.freedesktop.org/xcb/proto"
+    },
+    "libxcb": {
+        "uri": "git://anongit.freedesktop.org/xcb/libxcb"
+    },
     "mesa": {
         "uri": "git://anongit.freedesktop.org/mesa/mesa",
         "meson": "-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true"
