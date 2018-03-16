@@ -69,20 +69,48 @@ class RepoConfig:
             self._config = json.load(config_file)
         except IOError:
             self._config = {
-                    'use': None,
                     'repos': {},
                 }
 
+        self._use = None
+        self._load_use()
+
     @property
     def use(self):
-        return self._config['use']
+        return self._use
 
-    @use.setter
-    def use(self, val):
-        if val != None and not self.exist(val):
-            raise Exception('Invalid repo: ' + val)
-        self._config['use'] = val
-        self._update()
+    def _check_base_path(self, path):
+        builderpath = os.path.join(path, '.builder')
+        if os.path.isdir(builderpath):
+            pkglistpath = os.path.join(builderpath, 'pkglist.json')
+            if os.path.exists(pkglistpath):
+                return True
+        return False
+
+    def _find_base(self):
+        path = os.path.curdir
+        homedir = os.path.expanduser('~')
+
+        while True:
+            fullpath = os.path.abspath(path)
+            # We don't want builddirs in root or home dir
+            if fullpath == homedir or fullpath == '/':
+                return None
+
+            if self._check_base_path(fullpath):
+                return fullpath
+
+            path = os.path.join(path, '..')
+
+    def _load_use(self):
+        path = self._find_base()
+        if path is None:
+            raise Exception("Couldn't find valid repo in the path: "
+                            + os.path.abspath(os.path.curdir))
+
+        repo = self.get_name(path)
+        if repo is not None:
+            self._use = repo
 
     def _update(self):
         os.makedirs(os.path.dirname(self._default_path), exist_ok=True)
@@ -96,7 +124,7 @@ class RepoConfig:
             print('%15s : %s' % (repo, repos[repo]['path']))
 
         print()
-        default_repo = self._config['use']
+        default_repo = self._use
         default_path = None
         if default_repo is not None:
             default_path = self.get_path(default_repo)
@@ -123,6 +151,12 @@ class RepoConfig:
 
     def exist(self, repo):
         return repo in self._config['repos']
+
+    def get_name(self, path):
+        for k, v in self._config['repos'].items():
+            if path == v['path']:
+                return k
+        return None
 
     def get_path(self, repo):
         return self._config['repos'][repo]['path']
@@ -481,7 +515,6 @@ class Builder:
                 'init': self.initialize,
                 'install': self.install,
                 'clean': self.clean,
-                'use': self.use,
                 'remove': self.remove,
                 'env': self.print_env,
                 }
@@ -619,22 +652,6 @@ class Builder:
 
         for p in self._pkgs:
             self._process_pkg(p, self._clean_pkg)
-
-    def use(self):
-        print('Use')
-        repo = self.__args.repo_name
-
-        if not self._repos.exist(repo):
-            print("Repo '%s' doesn't exist." % repo)
-            return
-
-        usepath = self._repos.get_path(repo)
-
-        print('Setting path to use:', usepath)
-        self._setup_base(usepath)
-        self._check_base_valid()
-
-        self._repos.use = repo
 
     def _clean_pkg(self, pkg):
         self.logger.logln('Cleaning package: ' + str(pkg))
