@@ -371,6 +371,15 @@ class Pkg:
         autoopts = self.get_conf('autotools')
         self._logger.logln('Build opts: "%s"' % autoopts)
 
+        # m4 workaround
+        #
+        # some packages have AC_CONFIG_MACRO_DIRS([m4]) or ACLOCAL_AMFLAGS = -I
+        # m4 but the m4 dir doesn't exist in the original repo, causing
+        # autogen.sh to fail. Let's just always create it, since it doesn't
+        # hurt anything
+        m4dir = os.path.join(self.srcpath, 'm4')
+        os.makedirs(m4dir, exist_ok=True)
+
         cmd = ['./autogen.sh']
         self._call(cmd, self.srcpath)
 
