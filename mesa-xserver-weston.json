@@ -30,7 +30,8 @@
         "skipinstall": true
     },
     "igt-gpu-tools": {
-        "uri": "git://anongit.freedesktop.org/drm/igt-gpu-tools"
+        "uri": "git://anongit.freedesktop.org/drm/igt-gpu-tools",
+        "buildtype": "autotools"
     },
     "crucible": {
         "uri": "git://anongit.freedesktop.org/mesa/crucible",
