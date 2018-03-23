@@ -20,7 +20,7 @@
     },
     "mesa": {
         "uri": "git://anongit.freedesktop.org/mesa/mesa",
-        "meson": "-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dgbm=true"
+        "meson": "-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dtools=intel -Dgbm=true"
     },
     "waffle": {
         "uri": "https://github.com/waffle-gl/waffle.git"
