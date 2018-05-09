@@ -104,9 +104,9 @@ class RepoConfig:
 
     def _load_use(self):
         path = self._find_base()
-        if path is None:
-            raise Exception("Couldn't find valid repo in the path: "
-                            + os.path.abspath(os.path.curdir))
+        # if path is None:
+        #     raise Exception("Couldn't find valid repo in the path: "
+        #                     + os.path.abspath(os.path.curdir))
 
         repo = self.get_name(path)
         if repo is not None:
