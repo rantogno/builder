@@ -453,6 +453,7 @@ class Builder:
             reponame = args.repo
             if reponame is None:
                 reponame = self._repos.use
+            self.name = reponame
             path = self._repos.get_path(reponame)
             self._setup_base(path)
             self._check_base_valid()
@@ -595,6 +596,10 @@ class Builder:
         content += '"$WLD/share/vulkan/icd.d/intel_icd.x86_64.json"' + endl
 
         content += 'export PIGLIT_PLATFORM=gbm' + endl
+
+        name = '(' + self.name + ')'
+
+        content += 'PS1="' + name + ' $PS1"'
 
         return content
 
