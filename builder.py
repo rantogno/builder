@@ -15,7 +15,7 @@ class Color:
         self.msg = msg
         self.color = color
     def __str__(self):
-        return '\[%s\]%s\[\033[0m\]' % (self.color, self.msg)
+        return '%s%s\033[0m' % (self.color, self.msg)
 
 class Bold(Color):
     def __init__(self, msg):
