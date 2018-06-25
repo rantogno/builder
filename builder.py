@@ -438,7 +438,7 @@ class Pkg:
         self._logger.logln('Cleaning package: ' + self.name)
         cmd = ['git', 'clean', '-fdx']
         self._call(cmd, self.srcpath)
-        shutil.rmtree(self.buildpath)
+        shutil.rmtree(self.buildpath, ignore_errors=True)
         os.remove(self.jsonpath)
 
 class Builder:
