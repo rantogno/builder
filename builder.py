@@ -189,11 +189,10 @@ class Pkg:
         self._buildtype = pkgconf.get('buildtype')
 
         srcdir = os.path.join(basedir, 'src')
-        builddir = os.path.join(basedir, 'build')
         workdir = os.path.join(basedir, '.workdir')
 
         self.srcpath = os.path.join(srcdir, self.name)
-        self.buildpath = os.path.join(builddir, self.name)
+        self.buildpath = os.path.join(self.srcpath, 'build')
 
         self._skipped = True
 
