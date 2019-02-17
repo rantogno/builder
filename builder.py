@@ -358,10 +358,11 @@ class Pkg:
         if self._check_built():
             return
         cmd = ['ninja']
-        self._call(cmd, self.buildpath)
+        cmd += ['-C', self.buildpath]
+        self._call(cmd, self.srcpath)
 
         cmd.append('install')
-        self._call(cmd, self.buildpath)
+        self._call(cmd, self.srcpath)
         self.built = True
 
     def _call_configure(self):
