@@ -3,38 +3,35 @@
         "uri": "git://git.sv.gnu.org/libunwind.git"
     },
     "libdrm": {
-        "uri": "git://anongit.freedesktop.org/drm/libdrm"
+        "uri": "https://gitlab.freedesktop.org/mesa/drm.git"
     },
     "wayland": {
-        "uri": "git://anongit.freedesktop.org/wayland/wayland",
+        "uri": "https://gitlab.freedesktop.org/wayland/wayland.git",
         "autotools": "--disable-documentation"
     },
-    "wayland-protocols": {
-        "uri": "git://anongit.freedesktop.org/wayland/wayland-protocols"
-    },
     "xcb-proto": {
-        "uri": "git://anongit.freedesktop.org/xcb/proto"
+        "uri": "git@gitlab.freedesktop.org:xorg/proto/xcbproto.git"
     },
     "libxcb": {
-        "uri": "git://anongit.freedesktop.org/xcb/libxcb"
+        "uri": "git@gitlab.freedesktop.org:xorg/lib/libxcb.git"
     },
     "mesa": {
-        "uri": "git://anongit.freedesktop.org/mesa/mesa",
-        "meson": "-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers= -Dvulkan-drivers=intel -Dtools=intel -Dgbm=true"
+        "uri": "git@gitlab.freedesktop.org:mesa/mesa.git",
+        "meson": "-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers=iris -Dvulkan-drivers=intel -Dtools=intel -Dgbm=true"
     },
     "waffle": {
-        "uri": "https://github.com/waffle-gl/waffle.git"
+        "uri": "git@gitlab.freedesktop.org:mesa/waffle.git"
     },
     "piglit": {
-        "uri": "git://anongit.freedesktop.org/piglit",
+        "uri": "git@gitlab.freedesktop.org:mesa/piglit.git",
         "skipinstall": true
     },
     "igt-gpu-tools": {
-        "uri": "git://anongit.freedesktop.org/drm/igt-gpu-tools",
+        "uri": "git@gitlab.freedesktop.org:drm/igt-gpu-tools",
         "buildtype": "autotools"
     },
     "crucible": {
-        "uri": "git://anongit.freedesktop.org/mesa/crucible",
+        "uri": "git@gitlab.freedesktop.org:mesa/crucible",
         "skipinstall": true
     }
 }
