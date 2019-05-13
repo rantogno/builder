@@ -28,7 +28,7 @@
     },
     "igt-gpu-tools": {
         "uri": "git@gitlab.freedesktop.org:drm/igt-gpu-tools",
-        "buildtype": "autotools"
+        "buildsystem": "autotools"
     },
     "crucible": {
         "uri": "git@gitlab.freedesktop.org:mesa/crucible",

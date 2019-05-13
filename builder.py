@@ -186,7 +186,7 @@ class Pkg:
             'cmake': pkgconf.get('cmake'),
         }
 
-        self._buildtype = pkgconf.get('buildtype')
+        self._buildsystem = pkgconf.get('buildsystem')
 
         srcdir = os.path.join(basedir, 'src')
         workdir = os.path.join(basedir, '.workdir')
@@ -305,8 +305,8 @@ class Pkg:
             'cmake': self._build_cmake,
         }
 
-        if self._buildtype is not None:
-            build_func[self._buildtype]()
+        if self._buildsystem is not None:
+            build_func[self._buildsystem]()
         elif os.path.exists(os.path.join(self.srcpath, 'meson.build')):
             build_func['meson']()
         elif os.path.exists(os.path.join(self.srcpath, 'autogen.sh')):
