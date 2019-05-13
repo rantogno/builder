@@ -162,11 +162,14 @@ class RepoConfig:
         return self._config['repos'][repo]['path']
 
 class Pkg:
-    def __init__(self, pkglist, name, basedir, logger, env):
+    def __init__(self, pkglist, name, basedir, logger, env,
+                 build32=False, buildtype='debug'):
         self.name = name
         self._logger = logger
         self._env = env
         self._pkglist = pkglist
+        self._build32 = build32
+        self._buildtype = buildtype
 
         confdir = os.path.join(basedir, '.builder/pkgs')
         self.jsonpath = os.path.join(confdir, name + '.json')
@@ -192,7 +195,10 @@ class Pkg:
         workdir = os.path.join(basedir, '.workdir')
 
         self.srcpath = os.path.join(srcdir, self.name)
-        self.buildpath = os.path.join(self.srcpath, 'build')
+        if self._build32:
+            self.buildpath = os.path.join(self.srcpath, 'build32')
+        else:
+            self.buildpath = os.path.join(self.srcpath, 'build')
 
         self._skipped = True
 
@@ -340,11 +346,24 @@ class Pkg:
     def _call_meson(self):
         if self._check_configured():
             return
+
         mesonopts = self.get_conf('meson')
         self._logger.logln('Build opts: "%s"' % mesonopts)
 
         cmd = ['meson']
         cmd.append('--prefix=%s' % self._inst_dir)
+
+        libdir = 'lib64'
+        bindir = 'bin'
+        if self._build32:
+            libdir = 'lib32'
+            bindir = 'bin32'
+
+        cmd.append('--libdir=%s' % libdir)
+        cmd.append('--bindir=%s' % libdir)
+        if self._build32:
+            cmd.append('--cross-file=x86.txt')
+
         if mesonopts:
             cmd.extend(mesonopts.split())
         cmd.append(self.buildpath)
@@ -383,9 +402,17 @@ class Pkg:
         cmd = ['./autogen.sh']
         self._call(cmd, self.srcpath)
 
+        libdir = 'lib64'
+        bindir = 'bin'
+        if self._build32:
+            libdir = 'lib32'
+            bindir = 'bin32'
+
         os.makedirs(self.buildpath, exist_ok=True)
         cmd = ['%s/configure' % self.srcpath]
         cmd.append('--prefix=%s' % self._inst_dir)
+        cmd.append('--libdir=%s' % libdir)
+        cmd.append('--bindir=%s' % bindir)
         if autoopts:
             cmd.extend(autoopts.split())
         self._call(cmd, self.buildpath)
@@ -410,10 +437,18 @@ class Pkg:
         cmakeopts = self.get_conf('cmake')
         self._logger.logln('Build opts: "%s"' % cmakeopts)
 
+        libdir = 'lib64'
+        bindir = 'bin'
+        if self._build32:
+            libdir = 'lib32'
+            bindir = 'bin32'
+
         os.makedirs(self.buildpath, exist_ok=True)
         cmd = ['cmake']
         cmd.append(self.srcpath)
         cmd.append('-DCMAKE_INSTALL_PREFIX=%s' % self._inst_dir)
+        cmd.append('-DCMAKE_INSTALL_LIBDIR=%s' % libdir)
+        cmd.append('-DCMAKE_INSTALL_BINDIR=%s' % bindir)
         cmd.append('-GNinja')
         if cmakeopts:
             cmd.extend(cmakeopts.split())
@@ -616,7 +651,8 @@ class Builder:
         self.logger.logln('')
 
         pkg = Pkg(self._pkglist, pkgname,
-                self._base_dir, self.logger, self._env)
+                self._base_dir, self.logger, self._env,
+                self.__args.build32, self.__args.buildtype)
 
         operation(pkg)
 
@@ -721,6 +757,12 @@ def main():
 
     install_p.add_argument('--configure', '-c', action='store_true',
             help='force reconfigure package if already configured')
+
+    install_p.add_argument('--32', action='store_true', dest='build32',
+            help='build 32 bits version')
+
+    install_p.add_argument('--buildtype', type=str, choices={'debug', 'debugoptimized', 'release'},
+            help='build type')
 
     # Clean packages
     clean_p = commands.add_parser('clean',
