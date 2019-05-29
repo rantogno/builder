@@ -616,11 +616,12 @@ class Builder:
 
     def _env_content(self, endl='\n'):
         content = 'export WLD=%s' % self._inst_dir + endl
-        content += 'export LD_LIBRARY_PATH="$WLD/lib:$WLD/lib64"' + endl
+        content += 'export LD_LIBRARY_PATH="$WLD/lib:$WLD/lib64:$WLD/lib32"' + endl
 
         content += 'export PKG_CONFIG_PATH="'
         content += '$WLD/lib/pkgconfig:'
         content += '$WLD/lib64/pkgconfig:'
+        content += '$WLD/lib32/pkgconfig:'
         content += '$WLD/share/pkgconfig"' + endl
 
         content += 'export PATH="$WLD/bin:$PATH"' + endl
