@@ -360,7 +360,7 @@ class Pkg:
             bindir = 'bin32'
 
         cmd.append('--libdir=%s' % libdir)
-        cmd.append('--bindir=%s' % libdir)
+        cmd.append('--bindir=%s' % bindir)
         if self._build32:
             cmd.append('--cross-file=x86.txt')
 
