@@ -481,6 +481,7 @@ class Pkg:
 class Builder:
 
     ENV_NAME = 'setup_env.sh'
+    MESA_SCRIPT_NAME = 'mesa'
 
     def __init__(self, args, repos):
         self.__args = args
@@ -601,6 +602,23 @@ class Builder:
 
         self._env = env
 
+    def _write_mesa_file(self):
+        import os
+        import stat
+
+        mesapath = os.path.join(self._inst_dir, self.MESA_SCRIPT_NAME)
+
+        content = '#!/usr/bin/env bash\n\n'
+        content += self._env_content()
+        content += '\n'
+        content += 'exec $@\n'
+
+        mesafile = open(mesapath, 'w')
+        mesafile.write(content)
+        mesafile.close()
+        st = os.stat(mesapath)
+        os.chmod(mesapath, st.st_mode | 0o111)
+
     def _write_env_file(self):
         envpath = os.path.join(self._inst_dir, self.ENV_NAME)
 
@@ -686,6 +704,7 @@ class Builder:
         self._make_dirs()
 
         self._write_env_file()
+        self._write_mesa_file()
 
         self.logger.logln("Starting build.")
 
