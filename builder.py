@@ -669,9 +669,16 @@ class Builder:
     def _process_pkg(self, pkgname, operation):
         self.logger.logln('')
 
+        try:
+            build32 = self.__args.build32
+            buildtype = self.__args.buildtype
+        except AttributeError:
+            build32 = False
+            buildtype = 'debug'
+
         pkg = Pkg(self._pkglist, pkgname,
                 self._base_dir, self.logger, self._env,
-                self.__args.build32, self.__args.buildtype)
+                build32, buildtype)
 
         operation(pkg)
 
