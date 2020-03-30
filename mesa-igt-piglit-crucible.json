@@ -1,19 +1,6 @@
 {
-    "libunwind": {
-        "uri": "git://git.sv.gnu.org/libunwind.git"
-    },
-    "libdrm": {
-        "uri": "https://gitlab.freedesktop.org/mesa/drm.git"
-    },
-    "wayland": {
-        "uri": "https://gitlab.freedesktop.org/wayland/wayland.git",
-        "autotools": "--disable-documentation"
-    },
-    "xcb-proto": {
-        "uri": "git@gitlab.freedesktop.org:xorg/proto/xcbproto.git"
-    },
-    "libxcb": {
-        "uri": "git@gitlab.freedesktop.org:xorg/lib/libxcb.git"
+    "libglvnd": {
+        "uri": "https://gitlab.freedesktop.org/glvnd/libglvnd.git"
     },
     "mesa": {
         "uri": "git@gitlab.freedesktop.org:mesa/mesa.git",
