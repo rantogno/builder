@@ -4,7 +4,7 @@
     },
     "mesa": {
         "uri": "git@gitlab.freedesktop.org:mesa/mesa.git",
-        "meson": "-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers=i965 -Dgallium-drivers=iris -Dvulkan-drivers=intel -Dtools=intel -Dgbm=true"
+        "meson": "-Dplatforms=drm,x11,wayland,surfaceless -Ddri-drivers= -Dgallium-drivers=iris -Dvulkan-drivers=intel -Dtools=intel -Dgbm=true -Dglvnd=true"
     },
     "waffle": {
         "uri": "git@gitlab.freedesktop.org:mesa/waffle.git"
